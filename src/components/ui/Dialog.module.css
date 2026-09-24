@@ -1,0 +1,78 @@
+.dialog {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: min(540px, 100vw);
+  max-width: 100vw;
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding: 0;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: -20px 0 90px #16392c20;
+  animation: slideIn 0.24s ease-out;
+}
+.wide {
+  width: min(760px, 100vw);
+}
+.dialog::backdrop {
+  background: #142d285c;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+.inner {
+  min-height: 100%;
+  padding: 28px;
+}
+.inner > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+  gap: 16px;
+}
+.inner > header span {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  color: var(--green);
+  font-weight: 800;
+}
+.inner h2 {
+  font-size: 24px;
+  letter-spacing: -0.8px;
+  margin: 8px 0 0;
+  font-weight: 800;
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(35px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog,
+  .dialog::backdrop {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .inner {
+    padding: 20px;
+  }
+}
