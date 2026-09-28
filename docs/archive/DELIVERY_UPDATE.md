@@ -14,7 +14,7 @@ Se corrigió la causa de `/admin` sin estilos: un proceso de producción estaba 
 
 Checkout Pro para Argentina, pago único de 30 días, renovación manual. No se implementó débito automático. La activación exige un webhook firmado y consulta del pago al proveedor; se valida cuenta vendedora, ambiente, importe, moneda y pedido. Eventos repetidos no duplican beneficios. No se hicieron cobros ni llamadas de pago a cuentas reales.
 
-Se requieren las credenciales de Mercado Pago, URL pública/webhook y precios para cobrar; SMTP para correos. Instrucciones completas en [SUBSCRIPTIONS.md](SUBSCRIPTIONS.md) y variables en `.env.example`. El simulador existe únicamente en el harness de pruebas, nunca en las rutas de producción. La prueba de homologación con una cuenta real de prueba del proveedor sigue pendiente de esas credenciales.
+Se requieren las credenciales de Mercado Pago, URL pública/webhook y precios para cobrar; SMTP para correos. Instrucciones completas en [SUBSCRIPTIONS.md](../integrations/SUBSCRIPTIONS.md) y variables en `.env.example`. El simulador existe únicamente en el harness de pruebas, nunca en las rutas de producción. La prueba de homologación con una cuenta real de prueba del proveedor sigue pendiente de esas credenciales.
 
 ## Validación
 

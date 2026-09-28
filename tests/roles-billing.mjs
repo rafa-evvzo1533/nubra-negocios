@@ -1,3 +1,4 @@
+import { fixtureMember } from "./fixtures.mjs";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes, createHmac } from "node:crypto";
 import pg from "pg";
@@ -243,6 +244,24 @@ try {
   await webhook({ ...payment, collector_id: "999" }, { status: 400 });
   await webhook({ ...payment, transaction_amount: 1 }, { status: 400 });
   await webhook({ ...payment, live_mode: true }, { status: 400 });
+  globalThis.__nubraTestPayments.set(payment.id, payment);
+  await call("/api/v1/billing/reconcile", {
+    cookie: b.cookie,
+    method: "POST",
+    body: { orderId: order.id, paymentId: payment.id },
+    status: 404,
+  });
+  await call("/api/v1/billing/reconcile", {
+    cookie: a.cookie,
+    method: "POST",
+    body: { orderId: order.id, paymentId: payment.id, status: "approved" },
+    status: 400,
+  });
+  await call("/api/v1/billing/reconcile", {
+    cookie: a.cookie,
+    method: "POST",
+    body: { orderId: order.id, paymentId: payment.id },
+  });
   await webhook(payment);
   const sub = (await call("/api/v1/subscription", { cookie: a.cookie })).data
     .subscription;
@@ -265,7 +284,7 @@ try {
   // Role assignment and live revocation.
   const email = `role-member-${randomUUID()}@example.invalid`;
   const member = (
-    await call(`/api/admin/organizations/${a.id}/members`, {
+    await fixtureMember(db, a.id, {
       method: "POST",
       cookie: admin,
       status: 201,

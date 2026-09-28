@@ -1,10 +1,13 @@
 "use client";
+import {confirmAction} from "../ui/Notifications";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "./AccountForms";
 import s from "./Foundation.module.css";
+import { SupportAccess } from "./SupportAccess";
 import { PriceEditor } from "./PriceEditor";
+import { Brand } from "../ui/Brand";
 type Application = {
   id: string;
   status: string;
@@ -86,6 +89,7 @@ export function InternalConsole({
     <main className={s.page}>
       <header className={s.nav}>
         <div>
+          <Brand />
           <span className={s.eyebrow}>NUBRA · Acceso interno</span>
           <h1>Administración de la plataforma</h1>
           {actor && (
@@ -148,6 +152,11 @@ export function InternalConsole({
                 ["applications", "Solicitudes"],
                 ["organizations", "Empresas y suscripciones"],
                 ["plans", "Planes y límites"],
+                ...(["SUPER_ADMIN", "SUPPORT_ADMIN", "SECURITY_ADMIN"].includes(
+                  actor.role,
+                )
+                  ? [["support", "Soporte autorizado"]]
+                  : []),
               ].map(([key, label]) => (
                 <button
                   className={
@@ -163,6 +172,9 @@ export function InternalConsole({
                 <Link href="/admin">Gestión de accesos</Link>
               )}
             </nav>
+            {tab === "support" && (
+              <SupportAccess internal organizations={organizations} />
+            )}
             {tab === "applications" && (
               <>
                 <p className={s.muted}>
@@ -198,7 +210,7 @@ export function InternalConsole({
                         <form
                           className={s.form}
                           style={{ marginTop: 24 }}
-                          onSubmit={(e) => {
+                          onSubmit={async (e) => {
                             e.preventDefault();
                             const form = new FormData(e.currentTarget);
                             const action = (
@@ -206,7 +218,7 @@ export function InternalConsole({
                             ).submitter?.getAttribute("value");
                             if (
                               action === "reject" &&
-                              !confirm(
+                              !await confirmAction(
                                 "¿Rechazar esta solicitud? La decisión quedará auditada.",
                               )
                             )
@@ -265,7 +277,7 @@ export function InternalConsole({
                     {canBill && (
                       <form
                         className={s.form}
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           const f = new FormData(e.currentTarget);
                           void run(
@@ -324,11 +336,11 @@ export function InternalConsole({
                       <form
                         className={s.form}
                         style={{ marginTop: 24 }}
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           const f = new FormData(e.currentTarget);
                           if (
-                            !confirm(
+                            !await confirmAction(
                               "¿Cambiar el estado de acceso de esta empresa?",
                             )
                           )
@@ -385,11 +397,11 @@ export function InternalConsole({
                       <form
                         className={s.form}
                         style={{
-                          borderTop: "1px solid #e0e7e0",
+                          borderTop: "1px solid var(--border)",
                           padding: "20px 0",
                         }}
                         key={f.key}
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           const fd = new FormData(e.currentTarget);
                           void run(

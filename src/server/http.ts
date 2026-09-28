@@ -1,4 +1,6 @@
+import { securityLog } from "./logging";
 import { ZodError } from "zod";
+import { requestContext } from "./request-context";
 export class HttpError extends Error {
   constructor(
     public status: number,
@@ -33,7 +35,7 @@ export async function readJson(
 }
 export async function endpoint(action: () => Promise<unknown>, status = 200) {
   try {
-    return Response.json(await action(), {
+    return Response.json(await requestContext(action), {
       status,
       headers: { "Cache-Control": "no-store" },
     });
@@ -43,6 +45,11 @@ export async function endpoint(action: () => Promise<unknown>, status = 200) {
     if (error instanceof ZodError || error instanceof SyntaxError)
       return Response.json({ error: "Datos inválidos" }, { status: 400 });
     const code = (error as { code?: string }).code;
+    if (code === "42501")
+      return Response.json(
+        { error: "La política de acceso no permite esta operación" },
+        { status: 403 },
+      );
     if (code === "23505" || code === "23503")
       return Response.json(
         {
@@ -50,7 +57,7 @@ export async function endpoint(action: () => Promise<unknown>, status = 200) {
         },
         { status: 409 },
       );
-    console.error("Request failed", { code: code ?? "internal" });
+    securityLog("request.failed", { code: code ?? "internal" });
     return Response.json(
       { error: "No se pudo completar la operación" },
       { status: 500 },

@@ -1,3 +1,4 @@
+import { fixtureMember } from "./fixtures.mjs";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes, scryptSync } from "node:crypto";
 import { chromium, expect } from "@playwright/test";
@@ -273,7 +274,7 @@ try {
   );
   checks++;
   const member = (
-    await call(`/api/admin/organizations/${a.organizationId}/members`, {
+    await fixtureMember(db, a.organizationId, {
       cookie: admin,
       method: "POST",
       body: {

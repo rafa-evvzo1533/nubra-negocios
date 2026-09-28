@@ -1,5 +1,6 @@
 export type SessionContext = {
   userId: string;
+  memberId?: string;
   organizationId: string;
   permissions?: string[];
   role:

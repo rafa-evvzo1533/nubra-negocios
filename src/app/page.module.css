@@ -1,2 +1,8 @@
-.appShell { display: flex; min-height: 100vh; }
-.contentArea { min-width: 0; flex: 1; }
+.appShell {
+  display: flex;
+  min-height: 100vh;
+}
+.contentArea {
+  min-width: 0;
+  flex: 1;
+}

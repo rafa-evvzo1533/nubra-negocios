@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Invitations } from "./Invitations";
 import styles from "../business/BusinessModule.module.css";
 import { RolesManager, type CustomRole } from "./RolesManager";
@@ -50,7 +50,7 @@ export function TeamView({
   const [message, setMessage] = useState("");
   const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [existing, setExisting] = useState(false);
+
   const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
   useEffect(() => {
     if (adminOrganizationId || currentRole !== "OWNER") return;
@@ -104,33 +104,7 @@ export function TeamView({
       setBusy(false);
     }
   }
-  async function add(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const f = new FormData(form);
-    setBusy(true);
-    setError("");
-    try {
-      await request(base, "POST", {
-        name: f.get("name"),
-        email: f.get("email"),
-        role: f.get("role"),
-        existing,
-        ...(!existing ? { password: f.get("password") } : {}),
-      });
-      form.reset();
-      setExisting(false);
-      setRevision((v) => v + 1);
-      onChanged?.();
-      setMessage(
-        "Cuenta vinculada correctamente. Nubra debe entregar las credenciales por un canal autorizado.",
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error de conexión");
-    } finally {
-      setBusy(false);
-    }
-  }
+
   return (
     <section className={styles.module}>
       <div className={styles.heading}>
@@ -169,6 +143,7 @@ export function TeamView({
                 member={m}
                 disabled={
                   busy ||
+                  !!adminOrganizationId ||
                   (!adminOrganizationId &&
                     !["OWNER", "ADMINISTRATOR", "ADMIN"].includes(
                       currentRole,
@@ -196,60 +171,10 @@ export function TeamView({
         <Invitations roles={customRoles} />
       )}
       {adminOrganizationId && (
-        <form className={styles.form} style={{ marginTop: 25 }} onSubmit={add}>
-          <h2>Crear o vincular usuario</h2>
-          <fieldset disabled={busy}>
-            <label>
-              <input
-                type="checkbox"
-                style={{ width: "auto" }}
-                checked={existing}
-                onChange={(e) => setExisting(e.target.checked)}
-              />{" "}
-              Vincular una cuenta que ya existe
-            </label>
-            <div className={styles.formGrid}>
-              <label>
-                Nombre del usuario
-                <input name="name" required minLength={2} maxLength={120} />
-              </label>
-              <label>
-                Email del usuario
-                <input name="email" type="email" required maxLength={320} />
-              </label>
-            </div>
-            <label>
-              Rol del usuario
-              <select name="role" defaultValue="SALES">
-                {Object.entries(roles).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {!existing && (
-              <label>
-                Contraseña inicial del usuario
-                <input
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={12}
-                  maxLength={200}
-                />
-              </label>
-            )}
-          </fieldset>
-          <button className="primary-button" disabled={busy}>
-            {busy
-              ? "Guardando…"
-              : existing
-                ? "Vincular cuenta"
-                : "Crear usuario"}
-          </button>
-        </form>
+        <p>
+          Los accesos los administra el propietario desde su negocio. NUBRA solo
+          consulta la composición del equipo.
+        </p>
       )}
     </section>
   );

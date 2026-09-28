@@ -33,11 +33,19 @@ const product = z
     name,
     sku: z.string().trim().min(1).max(80),
     priceCents: z.number().int().min(0).max(100000000),
+    costCents: z.number().int().min(0).max(100000000).optional(),
+    category: z.string().trim().max(80).optional(),
+    unit: z.string().trim().min(1).max(24).optional(),
+    supplierId: z.uuid().nullable().optional(),
     minimumStock: z.number().int().min(0).max(1000000).default(0),
+    stock: z.number().int().min(0).max(1000000).optional(),
+    expectedStock: z.number().int().min(0).optional(),
+    stockReason: z.string().trim().min(3).max(240).optional(),
   })
   .strict();
 const movement = z
   .object({
+    idempotencyKey: z.uuid().optional(),
     productId: z.uuid(),
     quantity: z
       .number()
@@ -256,6 +264,26 @@ export async function mutate(
       );
     } else if (resource === "products") {
       const v = product.parse(body);
+      const before = id
+        ? Number(
+            (
+              await db.query(
+                "SELECT stock FROM products WHERE organization_id=$1 AND id=$2 FOR UPDATE",
+                [ctx.organizationId, id],
+              )
+            ).rows[0].stock,
+          )
+        : 0;
+      if (v.stock !== undefined && v.stock !== before) {
+        await requirePermission(ctx, "inventory.write");
+        if (id && (v.expectedStock === undefined || v.expectedStock !== before))
+          throw new HttpError(
+            409,
+            "El stock cambió mientras editabas. Cerrá y volvé a abrir el producto.",
+          );
+        if (id && !v.stockReason)
+          throw new HttpError(400, "Indicá el motivo del ajuste de stock");
+      }
       await db.query(
         id
           ? "UPDATE products SET name=$3,sku=$4,price_cents=$5,minimum_stock=$6 WHERE organization_id=$1 AND id=$2"
@@ -269,8 +297,73 @@ export async function mutate(
           v.minimumStock,
         ],
       );
+      if (
+        v.supplierId &&
+        !(
+          await db.query(
+            "SELECT id FROM suppliers WHERE organization_id=$1 AND id=$2",
+            [ctx.organizationId, v.supplierId],
+          )
+        ).rows.length
+      )
+        throw new HttpError(404, "Proveedor no encontrado");
+      await db.query(
+        "UPDATE products SET cost_cents=COALESCE($3,cost_cents),category=COALESCE($4,category),unit=COALESCE($5,unit),supplier_id=CASE WHEN $6 THEN $7::uuid ELSE supplier_id END WHERE organization_id=$1 AND id=$2",
+        [
+          ctx.organizationId,
+          entityId,
+          v.costCents ?? null,
+          v.category ?? null,
+          v.unit ?? null,
+          v.supplierId !== undefined,
+          v.supplierId ?? null,
+        ],
+      );
+      if (v.stock !== undefined && v.stock !== before) {
+        await db.query(
+          "UPDATE products SET stock=$3 WHERE organization_id=$1 AND id=$2",
+          [ctx.organizationId, entityId, v.stock],
+        );
+        await db.query(
+          "INSERT INTO inventory_movements(id,organization_id,product_id,quantity,reason,previous_quantity,new_quantity,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+          [
+            randomUUID(),
+            ctx.organizationId,
+            entityId,
+            v.stock - before,
+            v.stockReason ?? "Stock inicial",
+            before,
+            v.stock,
+            ctx.userId,
+          ],
+        );
+        await audit(db, ctx, "inventory.adjusted", entityId, "inventory");
+      }
     } else if (resource === "inventory") {
       const v = movement.parse(body);
+      await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [
+        ctx.organizationId,
+      ]);
+      if (v.idempotencyKey) {
+        const prior = (
+          await db.query(
+            "SELECT id,product_id,quantity,reason FROM inventory_movements WHERE organization_id=$1 AND idempotency_key=$2",
+            [ctx.organizationId, v.idempotencyKey],
+          )
+        ).rows[0];
+        if (prior) {
+          if (
+            prior.product_id !== v.productId ||
+            prior.quantity !== v.quantity ||
+            prior.reason !== v.reason
+          )
+            throw new HttpError(
+              409,
+              "La solicitud de stock ya se usó con otros datos",
+            );
+          return { id: prior.id };
+        }
+      }
       const updated = await db.query(
         "UPDATE products SET stock=stock+$3 WHERE organization_id=$1 AND id=$2 AND stock+$3>=0 RETURNING id",
         [ctx.organizationId, v.productId, v.quantity],
@@ -288,6 +381,11 @@ export async function mutate(
           ctx.userId,
         ],
       );
+      if (v.idempotencyKey)
+        await db.query(
+          "UPDATE inventory_movements SET idempotency_key=$3 WHERE organization_id=$1 AND id=$2",
+          [ctx.organizationId, entityId, v.idempotencyKey],
+        );
     } else {
       const v = saleInput.extend({ idempotencyKey: z.uuid() }).parse(body);
       await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [

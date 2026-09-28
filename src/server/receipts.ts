@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authorize } from "./business";
 import { postgres } from "./postgres";
 import { transaction, audit } from "./transactions";
+import {consumeUsage} from "./subscriptions";
 import { HttpError } from "./http";
 const input = z
   .object({
@@ -51,6 +52,7 @@ export async function importReceipt(body: unknown) {
       )
     ).rows[0].future;
     if (future) throw new HttpError(400, "La fecha no puede ser futura");
+    await consumeUsage(db,ctx,"monthly_sales");
     const id = randomUUID();
     await db.query(
       `INSERT INTO sales(id,organization_id,total_cents,source,source_reference,created_at) SELECT $2,$1,$3,'RECEIPT',$4,($5::date+TIME '12:00') AT TIME ZONE timezone FROM organizations WHERE id=$1`,
@@ -80,5 +82,9 @@ export async function receiptImage(id: string) {
     )
   ).rows[0];
   if (!row) throw new HttpError(404, "Comprobante no encontrado");
+  await postgres.query(
+    "INSERT INTO audit_logs(id,organization_id,user_id,action,entity_type,entity_id) VALUES($1,$2,$3,'FILE_DOWNLOADED','receipt',$4)",
+    [randomUUID(), ctx.organizationId, ctx.userId, id],
+  );
   return row;
 }

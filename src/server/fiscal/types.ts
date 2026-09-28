@@ -1,5 +1,6 @@
 export type FiscalEnvironment = "HOMOLOGATION" | "PRODUCTION";
-export type FiscalInvoiceStatus = "DRAFT" | "PENDING" | "AUTHORIZED" | "REJECTED" | "UNCERTAIN";
+export type FiscalInvoiceStatus =
+  "DRAFT" | "PENDING" | "AUTHORIZED" | "REJECTED" | "UNCERTAIN";
 
 export type FiscalProfile = {
   organizationId: string;
@@ -29,7 +30,11 @@ export type FiscalAttemptResult = {
 };
 
 export interface FiscalProvider {
-  getCapabilities(): { service: string; environment: FiscalEnvironment; canIssue: boolean };
+  getCapabilities(): {
+    service: string;
+    environment: FiscalEnvironment;
+    canIssue: boolean;
+  };
   issue(draft: FiscalInvoiceDraft): Promise<FiscalAttemptResult>;
   reconcile(invoiceId: string): Promise<FiscalAttemptResult>;
 }

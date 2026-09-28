@@ -11,7 +11,7 @@ export async function GET(
     const id = z.uuid().parse((await params).id);
     return (
       await postgres.query(
-        "SELECT id,action,entity_type,created_at FROM audit_logs WHERE organization_id=$1 ORDER BY created_at DESC,id LIMIT 100",
+        "SELECT id,action,'platform' AS entity_type,created_at FROM platform_audit_logs WHERE organization_id=$1 ORDER BY created_at DESC,id LIMIT 100",
         [id],
       )
     ).rows;

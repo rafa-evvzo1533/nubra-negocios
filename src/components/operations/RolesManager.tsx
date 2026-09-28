@@ -1,4 +1,5 @@
 "use client";
+import {confirmAction} from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import { ShieldCheck, Plus, Pencil, Trash2 } from "lucide-react";
 import { api } from "../foundation/AccountForms";
@@ -13,12 +14,17 @@ export type CustomRole = {
 };
 const names: Record<string, string> = {
   customers: "Clientes",
+  suppliers:"Proveedores",
+  accounts:"Cuenta corriente",
+  reports:"Reportes (requiere lectura financiera)",
+  audit:"Historial de actividad",
   products: "Productos",
   sales: "Ventas",
   inventory: "Inventario",
   quotes: "Presupuestos",
   cash: "Caja",
   members: "Equipo",
+  finance: "Resumen financiero (requiere lectura de caja)",
 };
 export function RolesManager({ onChanged }: { onChanged: () => void }) {
   const [roles, setRoles] = useState<CustomRole[]>([]),
@@ -135,7 +141,7 @@ export function RolesManager({ onChanged }: { onChanged: () => void }) {
                   className="secondary-button"
                   disabled={busy}
                   onClick={async () => {
-                    if (!confirm(`¿Eliminar el rol ${role.name}?`)) return;
+                    if (!await confirmAction(`¿Eliminar el rol ${role.name}?`)) return;
                     setBusy(true);
                     try {
                       await api("/api/v1/roles/" + role.id, "DELETE");
@@ -219,6 +225,25 @@ export function RolesManager({ onChanged }: { onChanged: () => void }) {
                 </tbody>
               </table>
             </div>
+            <fieldset>
+              <legend>Permisos adicionales</legend>
+              {[
+                ["data.export", "Exportar datos de los módulos habilitados"],
+                ["sales.analytics", "Ver indicadores y totales de ventas"],
+              ].map(
+                ([key, label]) =>
+                  permissions.includes(key) && (
+                    <label key={key} className={s.check}>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(key)}
+                        onChange={(e) => toggle(key, e.target.checked)}
+                      />
+                      {label}
+                    </label>
+                  ),
+              )}
+            </fieldset>
             <p className={s.muted}>
               La gestión de propietarios, roles y suscripciones queda reservada
               a los responsables del negocio.

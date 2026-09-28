@@ -1,10 +1,10 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Camera, Package, Trash2, LoaderCircle, X } from "lucide-react";
 import type { Resource } from "@/server/permissions";
 import { Dialog } from "../ui/Dialog";
 import { EntityPicker } from "./EntityPicker";
-import { money, send, type Row } from "./client";
+import { api, money, send, type Row } from "./client";
 import styles from "./BusinessModule.module.css";
 import { PhotoSale } from "../operations/PhotoSale";
 
@@ -22,13 +22,30 @@ export function Composer({
   currency,
   onClose,
   onSaved,
+  canReadSuppliers = false,
 }: {
   resource: Resource;
   editing?: Row;
   currency: string;
   onClose: () => void;
   onSaved: () => void;
+  canReadSuppliers?: boolean;
 }) {
+  const [suppliers, setSuppliers] = useState<
+    { id: string; name: string; active: boolean }[] | null
+  >(null);
+  useEffect(() => {
+    if (resource !== "products" || !canReadSuppliers) return;
+    let active = true;
+    api<{ id: string; name: string; active: boolean }[]>("commerce/suppliers")
+      .then((rows) => {
+        if (active) setSuppliers(rows);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [resource, canReadSuppliers]);
   const [photoMode, setPhotoMode] = useState(false);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
@@ -72,7 +89,20 @@ export function Composer({
         name: val("name"),
         sku: val("sku"),
         priceCents: Math.round(Number(val("price")) * 100),
+        costCents: Math.round(Number(val("cost")) * 100),
+        category: val("category"),
+        unit: val("unit"),
+        ...(suppliers ? { supplierId: val("supplierId") || null } : {}),
         minimumStock: Number(val("minimumStock")),
+        stock: Number(val("stock")),
+        ...(editing
+          ? {
+              expectedStock: Number(editing.stock),
+              ...(val("stockReason")
+                ? { stockReason: val("stockReason") }
+                : {}),
+            }
+          : {}),
       };
     else if (resource === "inventory") {
       if (!product) {
@@ -81,6 +111,7 @@ export function Composer({
       }
       body = {
         productId: product.id,
+        idempotencyKey,
         quantity: Number(val("quantity")),
         reason: val("reason"),
       };
@@ -254,7 +285,7 @@ export function Composer({
                   />
                 </label>
                 <label>
-                  Stock mínimo
+                  Stock mínimo (alerta)
                   <input
                     name="minimumStock"
                     type="number"
@@ -266,8 +297,82 @@ export function Composer({
                   />
                 </label>
               </div>
+              <label>
+                Cantidad disponible
+                <input
+                  name="stock"
+                  type="number"
+                  min="0"
+                  max="1000000"
+                  step="1"
+                  required
+                  defaultValue={editing?.stock ?? 0}
+                />
+              </label>
+              <div className={styles.formGrid}>
+                <label>
+                  Costo unitario ({currency})
+                  <input
+                    name="cost"
+                    type="number"
+                    min="0"
+                    max="1000000"
+                    step="0.01"
+                    required
+                    defaultValue={Number(editing?.cost_cents ?? 0) / 100}
+                  />
+                </label>
+                <label>
+                  Categoría
+                  <input
+                    name="category"
+                    maxLength={80}
+                    defaultValue={editing?.category ?? ""}
+                  />
+                </label>
+              </div>
+              <label>
+                Unidad de venta
+                <input
+                  name="unit"
+                  maxLength={24}
+                  required
+                  defaultValue={editing?.unit ?? "unidad"}
+                />
+              </label>
+              {suppliers && (
+                <label>
+                  Proveedor
+                  <select
+                    name="supplierId"
+                    defaultValue={editing?.supplier_id ?? ""}
+                  >
+                    <option value="">Sin proveedor</option>
+                    {suppliers
+                      .filter((p) => p.active || p.id === editing?.supplier_id)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                          {p.active ? "" : " (archivado)"}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
+              {editing && (
+                <label>
+                  Motivo del ajuste de stock
+                  <input
+                    name="stockReason"
+                    maxLength={240}
+                    placeholder="Ej. Conteo físico, ingreso de mercadería"
+                  />
+                </label>
+              )}
               <p className={styles.help}>
-                Registrá las entradas y salidas de unidades desde Inventario.
+                La cantidad disponible son las unidades que podés vender. El
+                mínimo solo activa una alerta. Cada cambio de cantidad queda
+                registrado en Inventario.
               </p>
             </>
           )}

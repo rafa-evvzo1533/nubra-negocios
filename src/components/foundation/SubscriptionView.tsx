@@ -7,6 +7,8 @@ import { api } from "./AccountForms";
 import { Dialog } from "../ui/Dialog";
 import { PlanCards, formatPrice, type PlanCardData } from "./PlanCards";
 import s from "./Foundation.module.css";
+import { Brand } from "../ui/Brand";
+import { notify } from "../ui/Notifications";
 type Data = {
   subscription: {
     name: string;
@@ -53,6 +55,58 @@ export function SubscriptionView({ data }: { data: Data }) {
     [orders, setOrders] = useState<Order[]>([]),
     [revision, setRevision] = useState(0);
   const key = useRef<{ plan: string; id: string } | null>(null);
+  useEffect(() => {
+    if (!data.canManage) return;
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("order");
+    if (!orderId) return;
+    const paymentId = params.get("payment_id") ?? params.get("collection_id");
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    async function check() {
+      try {
+        if (paymentId && attempts % 4 === 0)
+          await api("/api/v1/billing/reconcile", "POST", {
+            orderId,
+            paymentId,
+          });
+        const history: Order[] = await api("/api/v1/billing/history", "GET");
+        if (!active) return;
+        setOrders(history);
+        const order = history.find((o) => o.id === orderId);
+        if (order?.status === "PAID") {
+          setMessage("Pago aprobado. Tu plan ya está activo.");
+          notify("Pago aprobado. Tu plan ya está activo.");
+          router.refresh();
+          return;
+        }
+        if (order && ["FAILED", "REFUNDED", "REVIEW"].includes(order.status)) {
+          setMessage(
+            "Estado del pago: " +
+              statuses[order.status] +
+              ". Consultá el historial.",
+          );
+          router.refresh();
+          return;
+        }
+        setMessage(
+          "Estamos esperando la acreditación de Mercado Pago. El plan se activará automáticamente cuando se apruebe.",
+        );
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error ? e.message : "No pudimos consultar el pago.",
+          );
+      }
+      if (active && ++attempts < 24) timer = setTimeout(check, 5000);
+    }
+    void check();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [data.canManage, router, revision]);
   useEffect(() => {
     if (!data.canManage) return;
     let active = true;
@@ -109,7 +163,7 @@ export function SubscriptionView({ data }: { data: Data }) {
       <div className={s.content}>
         <nav className={s.actions}>
           <Link className={s.brand} href="/">
-            nubra.
+            <Brand />
           </Link>
           <Link href="/">← Volver al negocio</Link>
         </nav>
@@ -178,13 +232,18 @@ export function SubscriptionView({ data }: { data: Data }) {
         </p>
         <section className={s.card}>
           <h2>Beneficios y consumo de tu plan</h2>
+          <p>
+            Free no vence. Al alcanzar un límite, necesitás un plan con más
+            capacidad para seguir agregando registros. Tus datos se conservan.
+            Las ventas y exportaciones se renuevan cada mes calendario (UTC).
+          </p>
           <div className={s.scroll}>
             <table className={s.table}>
               <thead>
                 <tr>
                   <th>Capacidad</th>
                   <th>Uso actual</th>
-                  <th>Disponible</th>
+                  <th>Límite del plan</th>
                 </tr>
               </thead>
               <tbody>

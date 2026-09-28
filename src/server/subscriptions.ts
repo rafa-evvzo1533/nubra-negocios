@@ -59,7 +59,7 @@ export async function getLimit(
 export async function enforceCapacity(
   db: Db,
   ctx: SessionContext,
-  key: "users" | "customers" | "products",
+  key: "users" | "customers" | "products" | "suppliers",
 ) {
   await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [
     ctx.organizationId,
@@ -68,6 +68,7 @@ export async function enforceCapacity(
     users: "organization_members",
     customers: "customers",
     products: "products",
+    suppliers: "suppliers",
   }[key];
   const count = Number(
     (
@@ -112,7 +113,11 @@ export async function consumeUsage(
   WHERE usage_records.amount+EXCLUDED.amount<=$4::int RETURNING amount`,
     [ctx.organizationId, key, amount, limit],
   );
-  if (!result.rows.length) throw new HttpError(403, "Límite de uso alcanzado");
+  if (!result.rows.length)
+    throw new HttpError(
+      403,
+      "Alcanzaste el límite mensual de tu plan. Podés ampliar tu capacidad en Planes y suscripción.",
+    );
 }
 export async function subscriptionSummary() {
   const ctx = await getUserSession();
@@ -131,10 +136,28 @@ export async function subscriptionSummary() {
       [ctx.organizationId],
     )
   ).rows[0];
+  const additional = (
+    await postgres.query(
+      "SELECT f.key,u.amount FROM usage_records u JOIN features f ON f.id=u.feature_id WHERE u.organization_id=$1 AND u.period=date_trunc('month',NOW() AT TIME ZONE 'UTC')::date",
+      [ctx.organizationId],
+    )
+  ).rows;
+  const suppliers = Number(
+    (
+      await postgres.query(
+        "SELECT COUNT(*) AS n FROM suppliers WHERE organization_id=$1",
+        [ctx.organizationId],
+      )
+    ).rows[0].n,
+  );
   return {
     subscription,
     entitlements: await entitlements(ctx.organizationId),
-    usage,
+    usage: {
+      ...usage,
+      suppliers,
+      ...Object.fromEntries(additional.map((r) => [r.key, Number(r.amount)])),
+    },
     plans: await planCatalog(),
     billingReady: billingReady(),
     canManage: ["OWNER", "ADMINISTRATOR", "ADMIN"].includes(ctx.role),

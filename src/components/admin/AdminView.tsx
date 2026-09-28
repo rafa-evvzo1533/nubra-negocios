@@ -12,6 +12,7 @@ import { Dialog } from "../ui/Dialog";
 import { TeamView } from "../operations/TeamView";
 import common from "../business/BusinessModule.module.css";
 import styles from "./AdminView.module.css";
+import { Brand } from "../ui/Brand";
 type Organization = {
   id: string;
   name: string;
@@ -112,6 +113,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
     <main className={styles.page}>
       <div className={styles.heading}>
         <div>
+          <Brand />
           <p className={styles.eyebrow}>NUBRA · ADMINISTRACIÓN</p>
           <h1>Gestión de empresas</h1>
           <p className={styles.subtitle}>

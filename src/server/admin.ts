@@ -18,6 +18,7 @@ export async function requireAdmin(
       "BILLING_ADMIN",
       "REVIEWER",
       "READ_ONLY",
+      "SECURITY_ADMIN",
     ],
     review: ["OPERATIONS_ADMIN", "REVIEWER"],
     billing: ["BILLING_ADMIN", "SALES_ADMIN"],

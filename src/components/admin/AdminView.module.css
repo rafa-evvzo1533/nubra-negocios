@@ -11,10 +11,10 @@
 }
 .eyebrow {
   margin: 0 0 10px;
-  color: #95a19b;
+  color: var(--text-secondary);
   font:
-    9px "DM Mono",
-    monospace;
+    12px "Inter Variable",
+    sans-serif;
   letter-spacing: 1.1px;
 }
 .heading h1 {
@@ -24,7 +24,7 @@
 }
 .subtitle {
   margin: 9px 0 0;
-  color: #84908b;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 .secondary,
@@ -35,9 +35,9 @@
   padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
-  color: #607069;
-  font-size: 10px;
+  background: var(--panel);
+  color: var(--brand-cyan);
+  font-size: 12px;
   font-weight: 700;
 }
 .primary {
@@ -48,8 +48,8 @@
   border: 0;
   border-radius: 8px;
   background: var(--green);
-  color: white;
-  font-size: 10px;
+  color: var(--text-primary);
+  font-size: 12px;
   font-weight: 700;
 }
 .layout {
@@ -62,7 +62,7 @@
 .section {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: white;
+  background: var(--panel);
 }
 .nav {
   padding: 13px;
@@ -73,7 +73,7 @@
   gap: 8px;
   padding: 8px 10px 14px;
   color: var(--green-dark);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 .tab {
@@ -85,13 +85,13 @@
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: #77847e;
-  font-size: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
   text-align: left;
 }
 .tab:hover,
 .active {
-  background: #eaf7f2;
+  background: var(--panel-hover);
   color: var(--green-dark);
   font-weight: 700;
 }
@@ -101,24 +101,24 @@
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  background: #d8eee7;
-  font-size: 9px;
+  background: var(--panel-hover);
+  font-size: 12px;
 }
 .note {
   margin-top: 22px;
   padding: 12px 10px;
   border-top: 1px solid var(--line);
-  color: #7f8d86;
+  color: var(--text-secondary);
 }
 .note strong {
   display: block;
   margin-top: 10px;
-  color: #46564f;
-  font-size: 10px;
+  color: var(--text-primary);
+  font-size: 12px;
 }
 .note p {
   margin: 5px 0 0;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .content {
@@ -141,8 +141,8 @@
 }
 .sectionHeading p {
   margin: 5px 0 0;
-  color: #99a49e;
-  font-size: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .company {
   display: flex;
@@ -157,7 +157,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: #dceee8;
+  background: var(--panel-hover);
   color: var(--green-dark);
   font-weight: 800;
 }
@@ -171,8 +171,8 @@
 }
 .company span,
 .company small {
-  color: #9aa49e;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .form {
   display: grid;
@@ -183,8 +183,8 @@
 .form label {
   display: grid;
   gap: 7px;
-  color: #66746d;
-  font-size: 10px;
+  color: var(--brand-cyan);
+  font-size: 12px;
   font-weight: 700;
 }
 .form input {
@@ -194,7 +194,7 @@
   border-radius: 7px;
   outline: 0;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
 }
 .full {
   grid-column: 1 / -1;
@@ -205,18 +205,18 @@
   justify-content: space-between;
   gap: 15px;
   padding: 15px 0;
-  border-top: 1px solid #f0f2f0;
+  border-top: 1px solid var(--border);
 }
 .setting > div {
   display: grid;
   gap: 4px;
 }
 .setting strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .setting span {
-  color: #9aa49e;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .select {
   display: flex;
@@ -225,9 +225,9 @@
   padding: 7px 9px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: white;
-  color: #6f7d76;
-  font-size: 10px;
+  background: var(--panel);
+  color: var(--brand-cyan);
+  font-size: 12px;
 }
 .team {
   border: 1px solid var(--line);
@@ -243,15 +243,15 @@
   padding: 11px 13px;
 }
 .teamHeader {
-  background: #fafcfb;
-  color: #9aa49e;
+  background: var(--panel);
+  color: var(--text-secondary);
   font:
-    8px "DM Mono",
-    monospace;
+    12px "Inter Variable",
+    sans-serif;
   text-transform: uppercase;
 }
 .teamRow {
-  border-top: 1px solid #f0f2f0;
+  border-top: 1px solid var(--border);
 }
 .person {
   display: flex;
@@ -265,15 +265,15 @@
   min-width: 0;
 }
 .person strong {
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .person small,
 .last {
-  color: #9aa49e;
-  font-size: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -285,18 +285,18 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #e9f2fb;
-  color: #5b8fba;
-  font-size: 9px;
+  background: var(--panel-hover);
+  color: var(--brand-cyan);
+  font-size: 12px;
   font-weight: 800;
 }
 .role {
   width: max-content;
   padding: 5px 7px;
   border-radius: 5px;
-  background: #eaf7f2;
+  background: var(--panel-hover);
   color: var(--green-dark);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
 }
 .iconButton {
@@ -304,43 +304,43 @@
   place-items: center;
   border: 0;
   background: transparent;
-  color: #7b8983;
+  color: var(--text-secondary);
 }
 .plan {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px;
-  border: 1px solid #bfe5d7;
+  border: 1px solid var(--border);
   border-radius: 9px;
-  background: #f3fbf7;
+  background: var(--panel);
 }
 .plan > div > span {
-  color: var(--green);
+  color: var(--brand-cyan);
   font:
-    8px "DM Mono",
-    monospace;
+    12px "Inter Variable",
+    sans-serif;
 }
 .plan h3 {
   margin: 7px 0 4px;
   font-size: 21px;
 }
 .plan h3 small {
-  color: #89968f;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
   font-weight: 500;
 }
 .plan p {
   margin: 0;
-  color: #83918a;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .plan > strong {
   font-size: 18px;
 }
 .plan > strong small {
-  color: #8c9892;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
   font-weight: 500;
 }
 .usage {
@@ -357,21 +357,21 @@
   border-radius: 8px;
 }
 .usage span {
-  color: #89958f;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .usage strong {
   font-size: 15px;
 }
 .usage strong small {
-  color: #9aa49e;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
   font-weight: 500;
 }
 .usage i {
   height: 5px;
   border-radius: 5px;
-  background: #e8f1ee;
+  background: var(--panel-hover);
   overflow: hidden;
 }
 .usage b {
@@ -406,26 +406,26 @@
   flex: 1;
 }
 .integration strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .integration small {
-  color: #9aa49e;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .mint {
   background: var(--mint);
-  color: var(--green);
+  color: var(--brand-cyan);
 }
 .blue {
   background: var(--blue);
-  color: #5b8fba;
+  color: var(--brand-cyan);
 }
 .audit > div {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 13px 0;
-  border-bottom: 1px solid #f0f2f0;
+  border-bottom: 1px solid var(--border);
 }
 .audit > div:last-child {
   border: 0;
@@ -435,11 +435,11 @@
   gap: 4px;
 }
 .audit strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .audit small {
-  color: #9aa49e;
-  font-size: 9px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 .auditDot {
   width: 8px;
@@ -448,13 +448,13 @@
   border-radius: 50%;
 }
 .auditDot.mint {
-  background: #73caaa;
+  background: var(--panel-hover);
 }
 .auditDot.blue {
-  background: #78a9d0;
+  background: var(--panel-hover);
 }
 .auditDot.coral {
-  background: #ee9474;
+  background: var(--danger-soft);
 }
 @media (max-width: 800px) {
   .layout {
@@ -533,16 +533,16 @@
 }
 .authCard p {
   margin: 0;
-  color: #7f8d86;
-  font-size: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
   line-height: 1.6;
 }
 .authCard label,
 .form label {
   display: grid;
   gap: 7px;
-  color: #66746d;
-  font-size: 10px;
+  color: var(--brand-cyan);
+  font-size: 12px;
   font-weight: 700;
 }
 .authCard input,
@@ -553,7 +553,7 @@
   border-radius: 7px;
   outline: 0;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
 }
 .authIcon {
   display: grid;
@@ -562,7 +562,7 @@
   height: 48px;
   border-radius: 12px;
   background: var(--mint);
-  color: var(--green);
+  color: var(--brand-cyan);
 }
 .formActions {
   grid-column: 1 / -1;
@@ -571,27 +571,27 @@
 }
 .formError {
   display: block;
-  color: #bd5d43;
-  font-size: 10px;
+  color: var(--danger);
+  font-size: 12px;
 }
 .success {
   display: grid;
   gap: 5px;
   margin-top: 18px;
   padding: 13px;
-  border: 1px solid #bfe5d7;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #f3fbf7;
+  background: var(--panel);
   color: var(--green-dark);
-  font-size: 10px;
+  font-size: 12px;
 }
 .success span {
-  color: #708078;
-  font-family: "DM Mono", monospace;
-  font-size: 9px;
+  color: var(--brand-cyan);
+  font-family: "Inter Variable", sans-serif;
+  font-size: 12px;
 }
 .sectionIcon {
-  color: var(--green);
+  color: var(--brand-cyan);
 }
 .page {
   min-height: 100vh;
@@ -602,13 +602,13 @@
   border-bottom: 1px solid var(--line);
 }
 .eyebrow {
-  font-size: 11px;
-  color: #47745e;
+  font-size: 12px;
+  color: var(--brand-cyan);
 }
 .subtitle {
   font-size: 14px;
   line-height: 1.7;
-  color: #61736a;
+  color: var(--brand-cyan);
 }
 .secondary,
 .primary,
@@ -622,7 +622,7 @@
   width: min(460px, 100%);
   padding: 36px;
   border-radius: 20px;
-  box-shadow: 0 16px 50px #18382c0a;
+  box-shadow: 0 16px 50px var(--shadow-color);
   gap: 20px;
 }
 .authCard h2 {

@@ -340,3 +340,29 @@ export async function billingHistory() {
     )
   ).rows;
 }
+
+// The browser can request verification, but only the provider decides payment status.
+export async function reconcileCheckout(body: unknown) {
+  const ctx = await getUserSession();
+  if (!ctx) throw new HttpError(401, "Iniciá sesión");
+  if (!["OWNER", "ADMINISTRATOR", "ADMIN"].includes(ctx.role))
+    throw new HttpError(403, "Permisos insuficientes");
+  const v = z
+    .object({ orderId: z.uuid(), paymentId: z.string().regex(/^\d{1,30}$/) })
+    .strict()
+    .parse(body);
+  const order = (
+    await postgres.query(
+      "SELECT id FROM billing_orders WHERE id=$1 AND organization_id=$2",
+      [v.orderId, ctx.organizationId],
+    )
+  ).rows[0];
+  if (!order) throw new HttpError(404, "Pedido no encontrado");
+  if (!(await allowAuthAttempt("reconcile:" + ctx.userId, 30)))
+    throw new HttpError(429, "Esperá unos minutos antes de volver a consultar");
+  const payment = await new MercadoPagoProvider().payment(v.paymentId);
+  if (payment.external_reference !== v.orderId)
+    throw new HttpError(400, "El pago no corresponde a este pedido");
+  await reconcilePayment(payment);
+  return { verified: true };
+}

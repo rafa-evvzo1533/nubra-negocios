@@ -1,3 +1,4 @@
+import { fixtureMember } from "./fixtures.mjs";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import pg from "pg";
@@ -105,7 +106,7 @@ try {
   });
   const employeeEmail = `employee-${randomUUID()}@example.invalid`;
   const employee = (
-    await call(`/api/admin/organizations/${orgs[0]}/members`, {
+    await fixtureMember(db, orgs[0], {
       method: "POST",
       cookie: admin.cookie,
       body: { name: "Employee", email: employeeEmail, password, role: "SALES" },

@@ -1,10 +1,11 @@
+import { requirePermission } from "@/server/rbac";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { authorize } from "@/server/business";
 import { consumeUsage } from "@/server/subscriptions";
 import { transaction, audit } from "@/server/transactions";
 import { endpoint, HttpError } from "@/server/http";
-import { encodeCsv } from '@/domain/csv';
+import { encodeCsv } from "@/domain/csv";
 const queries = {
   customers:
     "SELECT name,email,phone,status FROM customers WHERE organization_id=$1 ORDER BY id LIMIT 10001",
@@ -25,12 +26,7 @@ export async function POST(
       .enum(["customers", "products", "sales", "inventory"])
       .parse((await params).resource);
     const ctx = await authorize(resource);
-    if (
-      !["OWNER", "ADMINISTRATOR", "ADMIN", "MANAGER", "FINANCE"].includes(
-        ctx.role,
-      )
-    )
-      throw new HttpError(403, "No tenés permiso para exportar");
+    await requirePermission(ctx, "data.export");
     await transaction(async (db) => {
       await consumeUsage(db, ctx, "csv_exports");
       const rows = (await db.query(queries[resource], [ctx.organizationId]))

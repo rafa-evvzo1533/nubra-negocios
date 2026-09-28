@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useId, type ReactNode } from "react";
 import { X } from "lucide-react";
 import styles from "./Dialog.module.css";
 export function Dialog({
@@ -16,6 +16,7 @@ export function Dialog({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId=useId();
   useEffect(() => {
     const dialog = ref.current;
     const previous = document.activeElement as HTMLElement | null;
@@ -31,7 +32,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       className={`${styles.dialog} ${wide ? styles.wide : ""}`}
       onCancel={(e) => {
         e.preventDefault();
@@ -45,7 +46,7 @@ export function Dialog({
         <header>
           <div>
             <span>NUBRA NEGOCIOS</span>
-            <h2 id="dialog-title">{title}</h2>
+            <h2 id={titleId}>{title}</h2>
           </div>
           <button
             type="button"

@@ -9,9 +9,9 @@ export default async function Page() {
         <div className={s.pricingIntro}>
           <span className={s.eyebrow}>Planes que acompañan tu crecimiento</span>
           <h1>
-            Empezá simple.
+            Planes para cada etapa
             <br />
-            Crecé con más posibilidades.
+            de tu negocio.
           </h1>
           <p>
             Elegí la capacidad que necesita tu negocio. Clientes, productos,
@@ -43,11 +43,11 @@ export default async function Page() {
                 restringen las nuevas altas hasta que tengas capacidad
                 disponible.
               </p>
-              <h3>¿Las funciones futuras ya están incluidas?</h3>
+              <h3>¿La renovación es automática?</h3>
               <p>
-                Acá se muestran las funciones disponibles. Los módulos de AI,
-                automatizaciones y analytics avanzado se anunciarán cuando estén
-                listos.
+                No. Cada pago habilita un período de 30 días. Podés renovar
+                desde tu negocio al finalizar ese período, sin débitos
+                automáticos.
               </p>
             </div>
           </div>

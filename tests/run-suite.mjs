@@ -8,7 +8,9 @@ import path from "node:path";
 import pg from "pg";
 import nextEnv from "@next/env";
 nextEnv.loadEnvConfig(process.cwd());
-const original = new URL(process.env.DATABASE_URL);
+const original = new URL(
+  process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL,
+);
 if (!["localhost", "127.0.0.1", "[::1]"].includes(original.hostname))
   throw new Error("Tests require a local PostgreSQL server");
 const database = "nubra_test_" + randomUUID().replaceAll("-", "");
@@ -90,6 +92,8 @@ const smtp = net.createServer((socket) => {
 await new Promise((resolve) => smtp.listen(0, "127.0.0.1", resolve));
 Object.assign(process.env, {
   DATABASE_URL: testUrl.toString(),
+  MIGRATION_DATABASE_URL: testUrl.toString(),
+  FILE_SIGNING_SECRET: randomBytes(32).toString("hex"),
   ADMIN_USERNAME: "test-admin",
   ADMIN_PASSWORD: randomBytes(24).toString("hex"),
   MAIL_ENABLED: "true",
@@ -151,10 +155,14 @@ try {
   }
   if (!ready) throw new Error("Test server did not start");
   await run("--test", ["tests/csv.test.mjs"]);
-  await import("./foundation.mjs");
-  await import("./roles-billing.mjs");
-  if (process.argv[2] !== "foundation")
-    for (const test of ["integration", "browser", "operations"])
+  if (process.argv[2] !== "security") {
+    await import("./foundation.mjs");
+    await import("./roles-billing.mjs");
+    await import("./commerce.mjs");
+  }
+  await import("./security.mjs");
+  if (!process.argv[2])
+    for (const test of ["integration", "browser", "operations", "visual"])
       await run(`tests/${test}.mjs`);
   console.log("PASS: isolated suite; migration replay succeeded.");
 } finally {

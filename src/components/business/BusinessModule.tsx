@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Resource } from "@/server/permissions";
 import { Dialog } from "../ui/Dialog";
+import { PageHeader } from "../ui/PageHeader";
 import { Composer } from "./Composer";
 import { RecordDetail } from "./RecordDetail";
 import {
@@ -76,6 +77,7 @@ export function BusinessModule({
   resource,
   writable,
   exportable = false,
+  canReadSuppliers = false,
   currency,
   onChanged,
   initialSearch = "",
@@ -85,6 +87,7 @@ export function BusinessModule({
   resource: Resource;
   writable: boolean;
   exportable?: boolean;
+  canReadSuppliers?: boolean;
   currency: string;
   onChanged: () => void;
   initialSearch?: string;
@@ -165,25 +168,25 @@ export function BusinessModule({
           {error}
         </p>
       )}
-      <div className={styles.heading}>
-        <div>
-          <span className={styles.eyebrow}>TU WORKSPACE</span>
-          <h1>{titles[resource]}</h1>
-          <p>{descriptions[resource]}</p>
-        </div>
-        {writable && (
-          <button
-            className="primary-button"
-            onClick={() => {
-              setEditing(undefined);
-              setCompose(true);
-            }}
-          >
-            <Plus size={17} />
-            {createLabels[resource]}
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title={titles[resource]}
+        description={descriptions[resource]}
+        eyebrow="TU NEGOCIO"
+        actions={
+          writable && (
+            <button
+              className="primary-button"
+              onClick={() => {
+                setEditing(undefined);
+                setCompose(true);
+              }}
+            >
+              <Plus size={17} />
+              {createLabels[resource]}
+            </button>
+          )
+        }
+      />
       {success && (
         <div role="status" className="notice-success">
           <Check size={17} />
@@ -519,6 +522,7 @@ export function BusinessModule({
       </div>
       {compose && writable && (
         <Composer
+          canReadSuppliers={canReadSuppliers}
           resource={resource}
           editing={editing}
           currency={currency}

@@ -3,7 +3,7 @@ import { can } from "./permissions";
 import type { UserSession } from "./auth";
 export async function dashboard(ctx: UserSession) {
   const org = [ctx.organizationId];
-  const sales = can(ctx.role, "sales", false, ctx.permissions)
+  const sales = ctx.permissions?.includes("sales.analytics")
     ? (
         await postgres.query(
           `SELECT COUNT(*)::int AS count, COALESCE(SUM(total_cents) FILTER(WHERE (sales.created_at AT TIME ZONE o.timezone)::date=(NOW() AT TIME ZONE o.timezone)::date),0)::text AS today, COALESCE(SUM(total_cents) FILTER(WHERE date_trunc('month',sales.created_at AT TIME ZONE o.timezone)=date_trunc('month',NOW() AT TIME ZONE o.timezone)),0)::text AS month FROM sales JOIN organizations o ON o.id=sales.organization_id WHERE sales.organization_id=$1 AND sales.status='CONFIRMED'`,

@@ -9,16 +9,16 @@
   border: 0;
   border-left: 1px solid var(--line);
   padding: 0;
-  background: #fff;
+  background: var(--panel);
   color: var(--ink);
-  box-shadow: -20px 0 90px #16392c20;
+  box-shadow: -20px 0 90px var(--shadow-color);
   animation: slideIn 0.24s ease-out;
 }
 .wide {
   width: min(760px, 100vw);
 }
 .dialog::backdrop {
-  background: #142d285c;
+  background: var(--background-secondary);
   backdrop-filter: blur(3px);
   animation: fadeIn 0.2s ease;
 }
@@ -36,9 +36,9 @@
   gap: 16px;
 }
 .inner > header span {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.7px;
-  color: var(--green);
+  color: var(--brand-cyan);
   font-weight: 800;
 }
 .inner h2 {

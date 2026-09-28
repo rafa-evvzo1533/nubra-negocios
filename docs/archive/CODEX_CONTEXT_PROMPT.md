@@ -10,7 +10,7 @@ Next.js 16 App Router, TypeScript strict, CSS Modules, Zod y PostgreSQL con `pg`
 - `/login`: acceso de empresa sin registro público.
 - `/`: Server Component valida sesión y membresía, carga workspaces y dashboard real.
 - `src/proxy.ts`: redirección preliminar y comprobación de origen para mutaciones.
-- Cookies HttpOnly, sesiones hash SHA-256 en DB, scrypt, expiración de ocho horas y logout revocable.
+- Cookies HttpOnly, sesiones hash SHA-256 en DB, Argon2id con compatibilidad de hashes scrypt anteriores, expiración de ocho horas y logout revocable.
 - Workspace activo en `sessions.organization_id`; cambio validado por membresía.
 - CRUD clientes/productos, carrito de ventas e inventario; RBAC, Zod y auditoría.
 - Búsqueda global Ctrl/Cmd+K, filtros y paginación PostgreSQL.

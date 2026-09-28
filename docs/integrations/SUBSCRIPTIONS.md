@@ -29,4 +29,12 @@ Devoluciones/contracargos del pedido vigente vuelven a Free. Si hubo una concesi
 
 Una suscripción vencida deja de resolver capacidades; el responsable conserva acceso a la sección de suscripción para renovar. Fuentes soportadas: FREE_REGISTRATION, DIRECT_PURCHASE, NUBRA_BASIC_BUNDLE, NUBRA_ENTERPRISE_BUNDLE, MANUAL_GRANT, PROMOTION y MIGRATION.
 
+## Retorno del pago y avisos
+
+Al regresar a suscripción con un pedido, la página consulta su estado durante hasta dos minutos. Si Mercado Pago proporciona `payment_id` o `collection_id`, solicita al servidor una conciliación autenticada; primero se comprueba que el pedido pertenece al negocio y después se consulta la API del proveedor. Esta vía usa exactamente las mismas validaciones que el webhook. Un parámetro `status=approved` por sí solo no tiene efecto.
+
+Cuando el pedido queda acreditado, aparece un aviso dentro de la web y se refrescan plan, vigencia y capacidades. Si la notificación llega después o el usuario cierra la página, el webhook sigue activando el plan. El botón Actualizar estado permite volver a consultar. Fallos, revisiones y devoluciones permanecen visibles en el historial.
+
+Free carece de vencimiento; sus límites de uso se detallan en [capacidades](../product/ENTITLEMENTS.md). Los precios continúan configurables y no se inventan valores para habilitar pagos.
+
 Referencias oficiales: [Preferencias de Checkout Pro](https://www.mercadopago.com.ar/developers/en/reference/online-payments/checkout-pro-preferences/create-preference/post) y [Webhooks](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-preferences/additional-content/notifications/webhooks).

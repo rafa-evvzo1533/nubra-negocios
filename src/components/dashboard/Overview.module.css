@@ -9,10 +9,10 @@
   margin-bottom: 28px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.7px;
-  color: var(--green);
+  color: var(--brand-cyan);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -20,7 +20,7 @@
 .eyebrow > span {
   width: 6px;
   height: 6px;
-  background: #21a77b;
+  background: var(--panel-hover);
   border-radius: 50%;
 }
 .heading h1 {
@@ -31,7 +31,7 @@
   line-height: 1.3;
 }
 .heading h1 > span {
-  color: var(--green);
+  color: var(--brand-cyan);
 }
 .heading p {
   margin: 0;
@@ -45,7 +45,7 @@
   margin-bottom: 24px;
 }
 .metric {
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 15px;
   padding: 22px;
@@ -56,14 +56,14 @@
 }
 .metric:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px #234c3710;
+  box-shadow: 0 8px 25px var(--shadow-color);
 }
 .metricTop {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   align-items: center;
-  color: #63746b;
+  color: var(--brand-cyan);
   font-size: 12px;
   font-weight: 600;
 }
@@ -72,20 +72,20 @@
   border-radius: 11px;
 }
 .green {
-  background: #e7f5ed;
-  color: #198565;
+  background: var(--panel-hover);
+  color: var(--text-primary);
 }
 .blue {
-  background: #edf4fc;
-  color: #548abb;
+  background: var(--panel);
+  color: var(--brand-cyan);
 }
 .amber {
-  background: #fdf4df;
-  color: #bb913a;
+  background: var(--panel-hover);
+  color: var(--danger);
 }
 .violet {
-  background: #f1edfa;
-  color: #9479bd;
+  background: var(--panel-hover);
+  color: var(--text-secondary);
 }
 .metric > strong {
   display: block;
@@ -96,8 +96,8 @@
   font-variant-numeric: tabular-nums;
 }
 .metric > small {
-  font-size: 10px;
-  color: #829087;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 .columns {
   display: grid;
@@ -106,7 +106,7 @@
   margin-bottom: 24px;
 }
 .panel {
-  background: white;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 25px;
@@ -125,7 +125,7 @@
   margin: 0;
 }
 .panelHeading p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin: 5px 0 0;
 }
@@ -133,7 +133,7 @@
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 7px;
-  font-size: 10px;
+  font-size: 12px;
   padding: 7px 9px;
   white-space: nowrap;
   color: var(--muted);
@@ -151,7 +151,7 @@
 }
 .chartSummary span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .chart {
   display: flex;
@@ -162,7 +162,7 @@
     to top,
     transparent 0,
     transparent 39px,
-    #edf2ee 40px
+    var(--panel-hover) 40px
   );
 }
 .barColumn {
@@ -183,7 +183,7 @@
 .bar {
   width: 100%;
   max-width: 26px;
-  background: linear-gradient(#63bc96, #208965);
+  background: linear-gradient(var(--panel-hover), var(--panel-hover));
   border-radius: 5px 5px 1px 1px;
   position: relative;
   animation: grow 0.55s ease-out;
@@ -195,9 +195,9 @@
   filter: brightness(0.93);
 }
 .barColumn small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
-  background: #fff;
+  background: var(--panel);
 }
 .tooltip {
   display: none;
@@ -205,12 +205,12 @@
   bottom: calc(100% + 7px);
   left: 50%;
   transform: translateX(-50%);
-  background: #193b30;
-  color: white;
+  background: var(--background-secondary);
+  color: var(--text-primary);
   white-space: nowrap;
   padding: 7px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   z-index: 2;
 }
 .bar:hover .tooltip,
@@ -218,8 +218,8 @@
   display: block;
 }
 .stockPanel {
-  border: 1px solid #d9eade;
-  background: linear-gradient(140deg, #edf6ec, #e5f1e6);
+  border: 1px solid var(--border);
+  background: linear-gradient(140deg, var(--panel-hover), var(--panel-hover));
   border-radius: 16px;
   padding: 25px;
 }
@@ -228,11 +228,11 @@
   font-size: 19px;
 }
 .stockPanel .eyebrow {
-  font-size: 9px;
+  font-size: 12px;
 }
 .stockText {
   font-size: 12px;
-  color: #65816c;
+  color: var(--brand-cyan);
   margin: 21px 0;
 }
 .stockText > strong {
@@ -246,13 +246,13 @@
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  border-bottom: 1px solid #d9e7da;
+  border-bottom: 1px solid var(--border);
   padding: 11px 0;
   font-size: 12px;
 }
 .stockList small {
-  font-size: 9px;
-  color: #72907b;
+  font-size: 12px;
+  color: var(--brand-cyan);
   font-weight: 500;
 }
 .stockPanel button {
@@ -263,9 +263,9 @@
   margin-top: 24px;
   padding: 12px 0 0;
   border: 0;
-  border-top: 1px solid #d4e4d7;
+  border-top: 1px solid var(--border);
   background: none;
-  color: #236e4a;
+  color: var(--text-primary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -275,10 +275,10 @@
 }
 .stockEmpty > div {
   display: inline-flex;
-  background: #d6eada;
+  background: var(--panel-hover);
   padding: 14px;
   border-radius: 50%;
-  color: #3c8961;
+  color: var(--brand-cyan);
 }
 .stockEmpty h3 {
   font-size: 16px;
@@ -287,7 +287,7 @@
 }
 .stockEmpty p {
   font-size: 12px;
-  color: #6a8571;
+  color: var(--brand-cyan);
   line-height: 1.8;
   max-width: 230px;
   margin: auto;
@@ -303,21 +303,21 @@
   align-items: center;
   gap: 12px;
   padding: 14px 0;
-  border-bottom: 1px solid #f0f3f0;
+  border-bottom: 1px solid var(--border);
 }
 .eventIcon {
   padding: 9px;
   border-radius: 9px;
   background: var(--paper);
-  color: #759889;
+  color: var(--brand-cyan);
 }
 .event strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   display: block;
 }
 .event small {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   display: block;
   margin-top: 4px;
@@ -326,7 +326,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #94b7a4;
+  background: var(--panel-hover);
   margin-left: auto;
 }
 @keyframes appear {
@@ -369,7 +369,7 @@
     padding: 15px;
   }
   .metricTop {
-    font-size: 10px;
+    font-size: 12px;
   }
   .metricIcon {
     padding: 7px;

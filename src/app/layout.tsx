@@ -1,5 +1,7 @@
+import "@fontsource-variable/inter";
 import type { Metadata } from "next";
 import "./globals.css";
+import {Notifications} from '@/components/ui/Notifications';
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>{children}<Notifications/></body>
     </html>
   );
 }

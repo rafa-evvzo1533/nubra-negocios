@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, LogIn } from "lucide-react";
 import styles from "./login.module.css";
+import { Brand } from "@/components/ui/Brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,21 +18,31 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const body = await response.json();
-    if (!response.ok) setError(body.error ?? "No se pudo iniciar sesión.");
-    else router.push("/");
-    setLoading(false);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const body = await response.json();
+      if (!response.ok) setError(body.error ?? "No se pudo iniciar sesión.");
+      else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch {
+      setError("No se pudo conectar. Intentá nuevamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>N</div>
+        <Link href="/" aria-label="Nubra Negocios · Inicio">
+          <Brand size={100} />
+        </Link>
         <p className={styles.kicker}>NUBRA NEGOCIOS</p>
         <h1>Ingresá a tu workspace</h1>
         <p className={styles.description}>
@@ -58,7 +69,11 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
           </label>
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p role="alert" className={styles.error}>
+              {error}
+            </p>
+          )}
           <button disabled={loading}>
             {loading ? (
               "Ingresando..."
@@ -71,7 +86,8 @@ export default function LoginPage() {
         </form>
         <Link href="/forgot-password">Olvidé mi contraseña</Link>
         <div className={styles.notice}>
-          <LockKeyhole size={15} /> ¿Todavía no tenés cuenta? <Link href="/register">Solicitá acceso</Link>.
+          <LockKeyhole size={15} /> ¿Todavía no tenés cuenta?{" "}
+          <Link href="/register">Solicitá acceso</Link>.
         </div>
       </div>
     </main>

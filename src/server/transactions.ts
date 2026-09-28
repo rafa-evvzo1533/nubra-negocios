@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import { postgres } from "./postgres";
 import type { SessionContext } from "./tenant";
 import type { Resource } from "./permissions";
+import { consumeUsage } from "./subscriptions";
 import { HttpError } from "./http";
 
 export async function transaction<T>(fn: (db: PoolClient) => Promise<T>) {
@@ -25,7 +26,8 @@ export async function audit(
   ctx: SessionContext,
   action: string,
   id: string,
-  resource: Resource | "payments" | "cash" | "members",
+  resource:
+    Resource | "payments" | "cash" | "members" | "suppliers" | "catalog",
 ) {
   await db.query(
     "INSERT INTO audit_logs(id,organization_id,user_id,action,entity_type,entity_id) VALUES($1,$2,$3,$4,$5,$6)",
@@ -41,6 +43,7 @@ export async function recordSale(
   customerId: string | null,
   items: PricedItem[],
 ) {
+  await consumeUsage(db, ctx, "monthly_sales");
   let total = 0;
   for (const item of [...items].sort((a, b) =>
     a.productId.localeCompare(b.productId),
@@ -70,6 +73,10 @@ export async function recordSale(
         item.quantity,
         item.price,
       ],
+    );
+    await db.query(
+      "UPDATE sale_items SET cost_cents=p.cost_cents FROM products p WHERE sale_items.organization_id=$1 AND sale_items.sale_id=$2 AND sale_items.product_id=$3 AND p.organization_id=$1 AND p.id=$3",
+      [ctx.organizationId, id, item.productId],
     );
     await db.query(
       "INSERT INTO inventory_movements(id,organization_id,product_id,quantity,reason,previous_quantity,new_quantity,user_id,reference_id) SELECT $1,$2,$3,$4,$5,stock-$4,stock,$6,$7 FROM products WHERE organization_id=$2 AND id=$3",

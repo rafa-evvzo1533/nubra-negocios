@@ -1,5 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, Check, CircleDollarSign, FileText, Home, Inbox, Package, Users } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  CircleDollarSign,
+  FileText,
+  Home,
+  Inbox,
+  Package,
+  Users,
+} from "lucide-react";
 
 export type Section = "dashboard";
 export type NavItem = { label: string; icon: LucideIcon; active?: boolean };

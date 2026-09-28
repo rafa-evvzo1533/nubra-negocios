@@ -4,8 +4,11 @@ import {
   createSession,
   USER_COOKIE,
   verifyPassword,
+  dummyPasswordHash,
+  hashPassword,
 } from "@/server/auth";
 import { ensureFoundationSchema, postgres } from "@/server/postgres";
+import { randomUUID } from "node:crypto";
 
 export const runtime = "nodejs";
 
@@ -36,13 +39,23 @@ export async function POST(request: Request) {
     { id: string; password_hash: string } | undefined;
   const validPassword = await verifyPassword(
     body.password,
-    user?.password_hash ?? `${"0".repeat(32)}:${"0".repeat(128)}`,
+    user?.password_hash ?? (await dummyPasswordHash()),
   );
-  if (!user || !validPassword)
+  if (!user || !validPassword) {
+    await postgres.query(
+      "INSERT INTO platform_audit_logs(id,action) VALUES($1,'AUTH_LOGIN_FAILED')",
+      [randomUUID()],
+    );
     return NextResponse.json(
       { error: "Credenciales inválidas" },
       { status: 401 },
     );
+  }
+  if (!user.password_hash.startsWith("$argon2id$"))
+    await postgres.query("UPDATE users SET password_hash=$2 WHERE id=$1", [
+      user.id,
+      await hashPassword(body.password),
+    ]);
   const token = await createSession("user", user.id);
   const response = NextResponse.json({ authenticated: true });
   response.cookies.set(USER_COOKIE, token, {

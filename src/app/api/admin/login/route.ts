@@ -5,6 +5,8 @@ import {
   allowAuthAttempt,
   hashToken,
   verifyPassword,
+  dummyPasswordHash,
+  hashPassword,
   ADMIN_COOKIE,
 } from "@/server/auth";
 import { postgres } from "@/server/postgres";
@@ -29,10 +31,20 @@ export async function POST(request: Request) {
     ).rows[0];
     const valid = await verifyPassword(
       v.password,
-      staff?.password_hash ?? `${"0".repeat(32)}:${"0".repeat(128)}`,
+      staff?.password_hash ?? (await dummyPasswordHash()),
     );
-    if (!staff || !valid)
+    if (!staff || !valid) {
+      await postgres.query(
+        "INSERT INTO platform_audit_logs(id,action) VALUES($1,'AUTH_STAFF_LOGIN_FAILED')",
+        [randomUUID()],
+      );
       throw new HttpError(401, "Usuario o contraseña inválidos");
+    }
+    if (!staff.password_hash.startsWith("$argon2id$"))
+      await postgres.query(
+        "UPDATE staff_users SET password_hash=$2 WHERE id=$1",
+        [staff.id, await hashPassword(v.password)],
+      );
     const token = randomBytes(32).toString("hex");
     await transaction(async (db) => {
       await db.query(

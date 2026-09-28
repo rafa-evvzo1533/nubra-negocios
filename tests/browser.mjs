@@ -234,7 +234,7 @@ try {
           getComputedStyle(el.parentElement.parentElement.parentElement)
             .animationDuration,
       ),
-    "1e-05s",
+    "0s",
   );
   assert.deepEqual(errors, []);
   const stock = (

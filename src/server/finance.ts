@@ -1,8 +1,11 @@
+import type { PoolClient } from "pg";
+import type { SessionContext } from "./tenant";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireAccess } from "./access";
 import { postgres } from "./postgres";
 import { audit, transaction } from "./transactions";
+import { requirePermission } from "./rbac";
 import { HttpError } from "./http";
 const amount = z.number().int().positive().max(1000000000000);
 const paymentSchema = z
@@ -16,6 +19,7 @@ const paymentSchema = z
   .strict();
 export async function financeSummary() {
   const ctx = await requireAccess("finance");
+  if (ctx.role !== "CASHIER") await requirePermission(ctx, "finance.read");
   const org = [ctx.organizationId];
   const sales = (
     await postgres.query(
@@ -46,88 +50,94 @@ export async function financeSummary() {
 export async function registerPayment(body: unknown) {
   const ctx = await requireAccess("finance", true);
   const v = paymentSchema.parse(body);
-  return transaction(async (db) => {
-    await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [
-      ctx.organizationId,
-    ]);
-    const prior = (
+  return transaction((db) => recordPayment(db, ctx, v));
+}
+export async function recordPayment(
+  db: PoolClient,
+  ctx: SessionContext,
+  v: z.infer<typeof paymentSchema>,
+) {
+  await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [
+    ctx.organizationId,
+  ]);
+  const prior = (
+    await db.query(
+      "SELECT id,sale_id,amount_cents,method,reference FROM payments WHERE organization_id=$1 AND idempotency_key=$2",
+      [ctx.organizationId, v.idempotencyKey],
+    )
+  ).rows[0];
+  if (prior) {
+    if (
+      prior.sale_id !== v.saleId ||
+      Number(prior.amount_cents) !== v.amountCents ||
+      prior.method !== v.method ||
+      prior.reference !== v.reference
+    )
+      throw new HttpError(409, "La solicitud ya se usó con otros datos");
+    return { id: prior.id };
+  }
+  const sale = (
+    await db.query(
+      "SELECT total_cents FROM sales WHERE organization_id=$1 AND id=$2 AND status='CONFIRMED' FOR UPDATE",
+      [ctx.organizationId, v.saleId],
+    )
+  ).rows[0];
+  if (!sale) throw new HttpError(404, "Venta no encontrada");
+  const paid = Number(
+    (
       await db.query(
-        "SELECT id,sale_id,amount_cents,method,reference FROM payments WHERE organization_id=$1 AND idempotency_key=$2",
-        [ctx.organizationId, v.idempotencyKey],
-      )
-    ).rows[0];
-    if (prior) {
-      if (
-        prior.sale_id !== v.saleId ||
-        Number(prior.amount_cents) !== v.amountCents ||
-        prior.method !== v.method ||
-        prior.reference !== v.reference
-      )
-        throw new HttpError(409, "La solicitud ya se usó con otros datos");
-      return { id: prior.id };
-    }
-    const sale = (
-      await db.query(
-        "SELECT total_cents FROM sales WHERE organization_id=$1 AND id=$2 AND status='CONFIRMED' FOR UPDATE",
+        "SELECT COALESCE(SUM(amount_cents),0)::text AS total FROM payments WHERE organization_id=$1 AND sale_id=$2",
         [ctx.organizationId, v.saleId],
       )
+    ).rows[0].total,
+  );
+  if (v.amountCents > Number(sale.total_cents) - paid)
+    throw new HttpError(409, "El cobro supera el saldo pendiente");
+  let cashId: string | null = null;
+  if (v.method === "CASH") {
+    const cash = (
+      await db.query(
+        "SELECT id FROM cash_sessions WHERE organization_id=$1 AND closed_at IS NULL FOR UPDATE",
+        [ctx.organizationId],
+      )
     ).rows[0];
-    if (!sale) throw new HttpError(404, "Venta no encontrada");
-    const paid = Number(
-      (
-        await db.query(
-          "SELECT COALESCE(SUM(amount_cents),0)::text AS total FROM payments WHERE organization_id=$1 AND sale_id=$2",
-          [ctx.organizationId, v.saleId],
-        )
-      ).rows[0].total,
-    );
-    if (v.amountCents > Number(sale.total_cents) - paid)
-      throw new HttpError(409, "El cobro supera el saldo pendiente");
-    let cashId: string | null = null;
-    if (v.method === "CASH") {
-      const cash = (
-        await db.query(
-          "SELECT id FROM cash_sessions WHERE organization_id=$1 AND closed_at IS NULL FOR UPDATE",
-          [ctx.organizationId],
-        )
-      ).rows[0];
-      if (!cash)
-        throw new HttpError(409, "Abrí una caja para registrar efectivo");
-      cashId = String(cash.id);
-    }
-    const id = randomUUID();
+    if (!cash)
+      throw new HttpError(409, "Abrí una caja para registrar efectivo");
+    cashId = String(cash.id);
+  }
+  const id = randomUUID();
+  await db.query(
+    "INSERT INTO payments(id,organization_id,sale_id,cash_session_id,amount_cents,method,reference,idempotency_key,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+    [
+      id,
+      ctx.organizationId,
+      v.saleId,
+      cashId,
+      v.amountCents,
+      v.method,
+      v.reference,
+      v.idempotencyKey,
+      ctx.userId,
+    ],
+  );
+  if (cashId)
     await db.query(
-      "INSERT INTO payments(id,organization_id,sale_id,cash_session_id,amount_cents,method,reference,idempotency_key,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+      "INSERT INTO cash_movements(id,organization_id,cash_session_id,payment_id,amount_cents,reason,idempotency_key,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
       [
-        id,
+        randomUUID(),
         ctx.organizationId,
-        v.saleId,
         cashId,
+        id,
         v.amountCents,
-        v.method,
-        v.reference,
+        `Cobro de venta ${v.saleId}`,
         v.idempotencyKey,
         ctx.userId,
       ],
     );
-    if (cashId)
-      await db.query(
-        "INSERT INTO cash_movements(id,organization_id,cash_session_id,payment_id,amount_cents,reason,idempotency_key,user_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
-        [
-          randomUUID(),
-          ctx.organizationId,
-          cashId,
-          id,
-          v.amountCents,
-          `Cobro de venta ${v.saleId}`,
-          v.idempotencyKey,
-          ctx.userId,
-        ],
-      );
-    await audit(db, ctx, "payments.created", id, "payments");
-    return { id };
-  });
+  await audit(db, ctx, "payments.created", id, "payments");
+  return { id };
 }
+
 const cashInput = z.discriminatedUnion("action", [
   z
     .object({

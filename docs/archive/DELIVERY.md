@@ -1,3 +1,7 @@
+# Entrega anterior
+
+Este documento conserva el estado de la entrega anterior. Para el rediseño y endurecimiento actual ver IMPLEMENTATION_REPORT.md.
+
 > Actualización posterior: ver [DELIVERY_UPDATE.md](DELIVERY_UPDATE.md). Mercado Pago, roles propios, invitaciones y mejoras visuales ya están implementados; las menciones a proveedor futuro de este informe describen la entrega inicial.
 
 # Entrega · Foundation comercial de Nubra Negocios

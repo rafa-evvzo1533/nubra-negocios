@@ -1,4 +1,5 @@
 "use client";
+import { Brand } from "./ui/Brand";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -29,7 +30,8 @@ import { SearchPalette } from "./SearchPalette";
 import styles from "./Workspace.module.css";
 import { FinanceView } from "./operations/FinanceView";
 import { TeamView } from "./operations/TeamView";
-type Section = Resource | "dashboard" | "finance" | "team";
+import { CommerceView, type CommerceSection } from "./operations/CommerceView";
+type Section = Resource | CommerceSection | "dashboard" | "finance" | "team";
 type Props = {
   session: Pick<
     UserSession,
@@ -148,11 +150,7 @@ export function Workspace({ session, workspaces, summary }: Props) {
         className={`${styles.sidebar} ${mobile ? styles.sidebarOpen : ""}`}
       >
         <div className={styles.brand}>
-          <span className={styles.brandMark}>n</span>
-          <span>
-            nubra<span className={styles.brandDot}>.</span>
-            <small>NEGOCIOS</small>
-          </span>
+          <Brand size={86} />
           <button
             className={`${styles.mobileClose} icon-button`}
             aria-label="Cerrar menú"
@@ -223,7 +221,33 @@ export function Workspace({ session, workspaces, summary }: Props) {
               <span>Equipo y roles</span>
             </button>
           )}
+          {(
+            [
+              ["pos", "Venta rápida", "sales.write"],
+              ["suppliers", "Proveedores", "suppliers.read"],
+              ["accounts", "Cuenta corriente", "accounts.read"],
+              ["reports", "Reportes", "reports.read"],
+              ["audit", "Historial de actividad", "audit.read"],
+            ] as const
+          )
+            .filter(([, , permission]) =>
+              session.permissions?.includes(permission),
+            )
+            .map(([id, label]) => (
+              <button
+                key={id}
+                aria-current={section === id ? "page" : undefined}
+                onClick={() => navigate(id)}
+              >
+                <Building size={18} />
+                <span>{label}</span>
+              </button>
+            ))}
           <p>MI NEGOCIO</p>
+          <a href="/settings/security">
+            <UsersRound size={18} />
+            Seguridad y privacidad
+          </a>
           <a href="/settings/subscription">
             <CreditCard size={18} />
             Planes y suscripción
@@ -295,9 +319,6 @@ export function Workspace({ session, workspaces, summary }: Props) {
                 <Command size={11} /> K
               </kbd>
             </button>
-            <span className={styles.headerAvatar} title={session.name}>
-              {session.name.slice(0, 1).toUpperCase()}
-            </span>
           </div>
         </header>
         <main className={styles.content} id="main-content">
@@ -327,18 +348,29 @@ export function Workspace({ session, workspaces, summary }: Props) {
             />
           ) : section === "team" ? (
             <TeamView currentRole={session.role} />
+          ) : ["suppliers", "accounts", "reports", "pos", "audit"].includes(
+              section,
+            ) ? (
+            <CommerceView
+              key={section}
+              section={section as CommerceSection}
+              currency={session.currency}
+              permissions={session.permissions ?? []}
+            />
           ) : (
             <BusinessModule
               key={`${session.organizationId}:${section}:${entry.version}`}
-              resource={section}
-              writable={can(session.role, section, true, session.permissions)}
-              exportable={[
-                "OWNER",
-                "ADMINISTRATOR",
-                "ADMIN",
-                "MANAGER",
-                "FINANCE",
-              ].includes(session.role)}
+              resource={section as Resource}
+              writable={can(
+                session.role,
+                section as Resource,
+                true,
+                session.permissions,
+              )}
+              exportable={session.permissions?.includes("data.export") ?? false}
+              canReadSuppliers={
+                session.permissions?.includes("suppliers.read") ?? false
+              }
               currency={session.currency}
               onChanged={() => router.refresh()}
               initialSearch={entry.query}

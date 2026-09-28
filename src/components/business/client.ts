@@ -10,6 +10,10 @@ export type Row = {
   next_contact?: string | null;
   sku?: string;
   price_cents?: number;
+  cost_cents?: number;
+  category?: string;
+  unit?: string;
+  supplier_id?: string | null;
   minimum_stock?: number;
   stock?: number;
   quantity?: number;

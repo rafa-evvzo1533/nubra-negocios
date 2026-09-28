@@ -1,4 +1,5 @@
 "use client";
+import {confirmAction} from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
@@ -44,6 +45,19 @@ export function RecordDetail({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState("");
+  const [fileLink, setFileLink] = useState("");
+  async function prepareFile() {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await send<{ url: string }>(`files/${row.id}/link`, {});
+      setFileLink(result.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo abrir el archivo");
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -132,9 +146,9 @@ export function RecordDetail({
             <button
               className="secondary-button"
               disabled={busy}
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  confirm(
+                  await confirmAction(
                     "¿Cancelar esta venta y devolver sus unidades al stock? Solo se permiten ventas sin cobros.",
                   )
                 )
@@ -255,13 +269,19 @@ export function RecordDetail({
             {detail.source === "RECEIPT" && (
               <p className={styles.help}>
                 Venta importada · {detail.source_reference} ·{" "}
-                <a
-                  href={`/api/v1/receipts/${detail.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Ver comprobante original
-                </a>
+                {fileLink ? (
+                  <a href={fileLink} target="_blank" rel="noreferrer">
+                    Abrir comprobante (enlace por 5 minutos)
+                  </a>
+                ) : (
+                  <button
+                    className="secondary-button"
+                    disabled={busy}
+                    onClick={prepareFile}
+                  >
+                    Ver comprobante original
+                  </button>
+                )}
                 . Sin movimiento de stock.
               </p>
             )}
