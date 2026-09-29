@@ -7,7 +7,12 @@ const globalForPostgres = globalThis as unknown as {
 };
 const pool =
   globalForPostgres.pool ??
-  new Pool({ connectionString: process.env.DATABASE_URL });
+  new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: Math.max(1, Math.min(20, Number(process.env.DATABASE_POOL_MAX) || 5)),
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+  });
 globalForPostgres.pool = pool;
 async function initializeContext(db: PoolClient) {
   await db.query("SET LOCAL ROLE nubra_runtime");
@@ -65,7 +70,7 @@ export const postgres = {
 export function ensureFoundationSchema() {
   return (globalForPostgres.schemaReady ??= postgres
     .query(
-      "SELECT version FROM schema_migrations WHERE version='0010_commerce.sql'",
+      "SELECT version FROM schema_migrations WHERE version='0011_billing_periods_local_plans.sql'",
     )
     .then((result) => {
       if (!result.rows.length)

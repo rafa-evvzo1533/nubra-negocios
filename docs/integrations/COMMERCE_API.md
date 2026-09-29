@@ -19,3 +19,5 @@ POS: `{idempotencyKey,customerId,items:[{productId,quantity}],paidCents,method}`
 Productos admite `costCents`, `category`, `unit` y `supplierId` opcionales en la API existente; omitirlos conserva los datos en edición. `supplierId:null` desvincula el proveedor.
 
 POST `/api/v1/billing/reconcile`: `{orderId,paymentId}`. Solo responsables del negocio dueño del pedido; limita frecuencia, consulta Mercado Pago y valida referencia, importe, moneda, vendedor y ambiente. No admite un estado indicado por cliente. La disponibilidad del plan se consulta en `/api/v1/subscription`.
+
+POST `/api/v1/billing/checkout`: `{plan,period,idempotencyKey}`, con `period` MONTHLY o YEARLY (por defecto MONTHLY). El precio se obtiene del catálogo del servidor. PATCH `/api/internal/admin/prices` también acepta `period` y configura ese importe/habilitación de manera independiente. El historial devuelve `billing_period`; LEGACY_30_DAYS queda reservado a pedidos previos a la migración.

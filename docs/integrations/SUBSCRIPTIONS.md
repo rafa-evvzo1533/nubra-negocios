@@ -7,7 +7,7 @@ Los planes son Free, Lite, Business y Enterprise. Sus capacidades y límites sal
 - `/register-business`: entrada visible al registro y estado de la solicitud.
 - `/plans`: planes, beneficios realmente disponibles y precios configurados.
 - `/settings/subscription`: plan actual, vigencia, consumo, contratación, consulta comercial e historial de pagos.
-- `/internal`, pestaña Planes: precios en ARS por 30 días, habilitación de compra y capacidades. Requiere permisos internos de facturación.
+- `/internal`, pestaña Planes: precios mensuales y anuales en ARS, habilitación independiente de cada modalidad y capacidades. Requiere permisos internos de facturación.
 
 ## Configuración
 
@@ -17,7 +17,9 @@ Los planes son Free, Lite, Business y Enterprise. Sus capacidades y límites sal
 4. Usar `MP_MODE=sandbox` y credenciales/cuentas de prueba; activar `BILLING_ENABLED=true`. Para producción usar `MP_MODE=live` y las credenciales correspondientes.
 5. Cargar el precio y marcar “Habilitar compra de este plan” en administración. Reiniciar el servidor tras cambiar variables de entorno.
 
-La implementación usa Checkout Pro: pago único por 30 días y renovación manual, sin débito automático. No se integró la API de suscripciones recurrentes. Los pedidos ya creados mantienen el precio original durante su vigencia de 24 horas. La operación del proveedor debe validarse con cuentas de prueba reales antes de habilitar cobros públicos; las pruebas automatizadas usan una API simulada local.
+La implementación usa Checkout Pro: pago único por un mes o un año calendario y renovación manual, sin débito automático. No se integró la API de suscripciones recurrentes. Cada pedido guarda precio y modalidad, y los pedidos ya creados mantienen esas condiciones durante su vigencia de 24 horas. Los anteriores a `0011` conservan 30 días (`LEGACY_30_DAYS`). La operación del proveedor debe validarse con cuentas de prueba reales antes de habilitar cobros públicos; las pruebas automatizadas usan una API simulada local.
+
+Los vencimientos nuevos agregan uno o doce meses en UTC, ajustando al último día si no existe el día original (31/enero → último día de febrero; 29/febrero anual → 28/febrero siguiente). Renovar el mismo plan activo suma el período después del vencimiento vigente. Las cuotas de ventas/exportaciones siguen siendo mensuales, incluso al pagar anual. Los precios anuales se cargan por su importe total; no hay descuento inventado ni multiplicación automática por doce.
 
 ## Garantías
 

@@ -35,7 +35,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
         <span>© NUBRA NEGOCIOS</span>
         <Link href="/privacy">Privacidad</Link>
         <Link href="/terms">Términos de uso</Link>
-        <Link href="/internal">NUBRA Internal</Link>
       </footer>
     </main>
   );

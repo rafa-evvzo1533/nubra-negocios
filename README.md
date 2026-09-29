@@ -32,7 +32,9 @@ Se recuperó el administrador local con npm run setup:admin -- --generate-local.
 - CSV por API con permisos, aislamiento, protección de fórmulas y cuota mensual.
 - Layout responsive, búsqueda Ctrl/Cmd+K, política de privacidad y términos como borradores.
 
-Nubra Base no se ofrece públicamente ni como parte de los planes. Mercado Pago Argentina está integrado para pagos por 30 días, sin renovación automática. Precios configurables en /internal; cobros deshabilitados hasta configurar cuenta, webhook, URL pública y precios. No hay IA, automatizaciones, depósitos múltiples ni emisión fiscal productiva activados.
+Nubra Base no se ofrece públicamente ni como parte de los planes. Mercado Pago Argentina está integrado para pagos mensuales o anuales, con activación automática al acreditar y sin débito recurrente. Precios independientes configurables en /internal; cobros deshabilitados hasta configurar cuenta, webhook, URL pública y precios. No hay IA, automatizaciones, depósitos múltiples ni emisión fiscal productiva activados.
+
+Para Cloud Hosting administrado de Hostinger, usar la [guía de hPanel](docs/deployment/HOSTINGER_HPANEL.md), `npm run build:hostinger` y `npm run start:hostinger`. PostgreSQL es externo; el runtime no recibe credenciales de migración. La plantilla está en `deploy/hostinger/runtime.env.example`.
 
 ## Verificación
 

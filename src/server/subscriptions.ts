@@ -166,7 +166,7 @@ export async function subscriptionSummary() {
 export async function planCatalog() {
   return (
     await postgres.query(
-      `SELECT p.code,p.name,p.price_cents,p.currency,p.checkout_enabled,json_agg(json_build_object('key',f.key,'name',f.name,'enabled',e.enabled,'available',f.available,'limit',e.limit_value) ORDER BY f.key) AS entitlements FROM plans p JOIN plan_entitlements e ON e.plan_id=p.id JOIN features f ON f.id=e.feature_id GROUP BY p.id ORDER BY CASE p.code WHEN 'FREE' THEN 1 WHEN 'LITE' THEN 2 WHEN 'BUSINESS' THEN 3 ELSE 4 END`,
+      `SELECT p.code,p.name,p.price_cents,p.currency,p.checkout_enabled,p.annual_price_cents,p.annual_checkout_enabled,json_agg(json_build_object('key',f.key,'name',f.name,'enabled',e.enabled,'available',f.available,'limit',e.limit_value) ORDER BY f.key) AS entitlements FROM plans p JOIN plan_entitlements e ON e.plan_id=p.id JOIN features f ON f.id=e.feature_id GROUP BY p.id ORDER BY CASE p.code WHEN 'FREE' THEN 1 WHEN 'LITE' THEN 2 WHEN 'BUSINESS' THEN 3 ELSE 4 END`,
     )
   ).rows;
 }

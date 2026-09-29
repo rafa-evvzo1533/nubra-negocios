@@ -835,3 +835,23 @@
     padding: 40px 22px;
   }
 }
+.businessDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 0 28px;
+  margin-top: 18px;
+}
+.businessDetails > div {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+.businessDetails dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.businessDetails dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

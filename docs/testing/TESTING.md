@@ -21,3 +21,9 @@ Desarrollo usa `.next-dev`, producción `.next`: compilar producción no reempla
 La suite también ejecuta `commerce.mjs`, `security.mjs` y `visual.mjs`. Comercio comprueba proveedores, vínculos entre empresas rechazados, POS con cobro parcial, rollback si no hay caja o stock, idempotencia, cuentas corrientes FIFO, sobrepago, costo histórico, reportes aislados, cuotas mensuales y avisos/confirmaciones en navegador. Roles/pagos comprueba además conciliación desde el retorno y rechazo de pedidos ajenos/estados enviados por cliente.
 
 Seguridad valida sesiones, archivos privados, soporte autorizado, rol SQL y RLS. Visual ejecuta seis anchos entre 360 y 1440 px. Las capturas actuales se guardan en `.local/qa/`, excluido del repositorio. Las pruebas del proveedor simulan HTTP local; la homologación con cuentas reales de Mercado Pago sigue siendo un paso de despliegue.
+
+## Mensual/anual y hPanel
+
+`billing-period.test.mjs` verifica fin de mes, año bisiesto y compatibilidad con pedidos antiguos de 30 días. Roles/pagos prueba precio anual independiente, importe/meses otorgados, replay y conflicto de modalidad con la misma clave. La navegación verifica el selector mensual/anual y que el enlace interno no se publique.
+
+El arranque `DEPLOYMENT_TARGET=hostinger` se comprobó localmente en un puerto separado: sirve `/api/health` y `/plans` desde el build existente, sin migraciones ni recompilación. Esto no reemplaza la comprobación final en hPanel con PostgreSQL externo. `npm run check:deployment` requiere ese entorno configurado y no imprime secretos.

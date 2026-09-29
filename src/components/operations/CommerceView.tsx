@@ -1,4 +1,5 @@
 "use client";
+import { displayLabel } from "@/domain/display";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../foundation/AccountForms";
 import { notify, confirmAction } from "../ui/Notifications";
@@ -413,7 +414,7 @@ export function CommerceView({
                     <tr key={e.id}>
                       <td>{date(e.created_at)}</td>
                       <td>{e.actor ?? "Sistema"}</td>
-                      <td>{e.action}</td>
+                      <td>{displayLabel(e.action)}</td>
                       <td>{e.entity_type}</td>
                     </tr>
                   ))}

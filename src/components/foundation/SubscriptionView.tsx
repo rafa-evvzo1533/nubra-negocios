@@ -9,6 +9,7 @@ import { PlanCards, formatPrice, type PlanCardData } from "./PlanCards";
 import s from "./Foundation.module.css";
 import { Brand } from "../ui/Brand";
 import { notify } from "../ui/Notifications";
+import type { BillingPeriod } from "@/domain/billing-period";
 type Data = {
   subscription: {
     name: string;
@@ -35,6 +36,7 @@ type Order = {
   amount_cents: number;
   currency: string;
   status: string;
+  billing_period: string;
   created_at: string;
   checkout_url: string | null;
 };
@@ -49,12 +51,17 @@ const statuses: Record<string, string> = {
 export function SubscriptionView({ data }: { data: Data }) {
   const router = useRouter();
   const [selected, setSelected] = useState<PlanCardData | null>(null),
+    [period, setPeriod] = useState<BillingPeriod>("MONTHLY"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [orders, setOrders] = useState<Order[]>([]),
     [revision, setRevision] = useState(0);
-  const key = useRef<{ plan: string; id: string } | null>(null);
+  const key = useRef<{
+    plan: string;
+    period: BillingPeriod;
+    id: string;
+  } | null>(null);
   useEffect(() => {
     if (!data.canManage) return;
     const params = new URLSearchParams(window.location.search);
@@ -132,10 +139,18 @@ export function SubscriptionView({ data }: { data: Data }) {
         selected.checkout_enabled &&
         selected.price_cents
       ) {
-        if (key.current?.plan !== selected.code)
-          key.current = { plan: selected.code, id: crypto.randomUUID() };
+        if (
+          key.current?.plan !== selected.code ||
+          key.current.period !== period
+        )
+          key.current = {
+            plan: selected.code,
+            period,
+            id: crypto.randomUUID(),
+          };
         const result = await api("/api/v1/billing/checkout", "POST", {
           plan: selected.code,
+          period,
           idempotencyKey: key.current.id,
         });
         window.location.assign(result.url);
@@ -214,8 +229,9 @@ export function SubscriptionView({ data }: { data: Data }) {
         <PlanCards
           plans={data.plans}
           current={data.subscription?.code}
-          onChoose={(p) => {
+          onChoose={(p, chosenPeriod) => {
             setError("");
+            setPeriod(chosenPeriod);
             setSelected(p);
           }}
           busy={busy}
@@ -294,7 +310,14 @@ export function SubscriptionView({ data }: { data: Data }) {
                         <td>
                           {new Date(o.created_at).toLocaleDateString("es-AR")}
                         </td>
-                        <td>{o.name}</td>
+                        <td>
+                          {o.name} ·{" "}
+                          {o.billing_period === "YEARLY"
+                            ? "Anual"
+                            : o.billing_period === "LEGACY_30_DAYS"
+                              ? "30 días"
+                              : "Mensual"}
+                        </td>
                         <td>{formatPrice(o.amount_cents, o.currency)}</td>
                         <td>
                           <span className={s.badge}>
@@ -328,7 +351,7 @@ export function SubscriptionView({ data }: { data: Data }) {
               <h3>{selected.name}</h3>
               <p className={s.muted}>
                 {payable
-                  ? `${formatPrice(selected.price_cents!, selected.currency)} por 30 días. Es un pago único, sin renovación ni débito automático. Vas a continuar en Mercado Pago.`
+                  ? `${formatPrice(selected.price_cents!, selected.currency)} por ${period === "YEARLY" ? "un año" : "un mes"}. Es un pago único por el período elegido, sin débito automático. Vas a continuar en Mercado Pago.`
                   : "Enviaremos una solicitud al equipo de NUBRA. Esta consulta no genera ningún cobro ni cambia tu plan actual."}
               </p>
               {error && (

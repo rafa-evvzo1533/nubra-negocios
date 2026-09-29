@@ -1,5 +1,5 @@
 "use client";
-import {confirmAction} from "../ui/Notifications";
+import { confirmAction } from "../ui/Notifications";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import s from "./Foundation.module.css";
 import { SupportAccess } from "./SupportAccess";
 import { PriceEditor } from "./PriceEditor";
 import { Brand } from "../ui/Brand";
+import { businessFields, displayLabel, displayValue } from "@/domain/display";
 type Application = {
   id: string;
   status: string;
@@ -29,6 +30,8 @@ type Org = {
 type Plan = {
   price_cents: number | null;
   checkout_enabled: boolean;
+  annual_price_cents?: number | null;
+  annual_checkout_enabled?: boolean;
   code: string;
   name: string;
   entitlements: {
@@ -94,7 +97,7 @@ export function InternalConsole({
           <h1>Administración de la plataforma</h1>
           {actor && (
             <p>
-              {actor.username} · {actor.role}
+              {actor.username} · {displayLabel(actor.role)}
             </p>
           )}
         </div>
@@ -189,17 +192,18 @@ export function InternalConsole({
                 {applications.map((a) => (
                   <article key={a.id} className={s.card}>
                     <h2>{String(a.business_data.name ?? a.name)}</h2>
-                    <span className={s.badge}>{a.status}</span>
+                    <span className={s.badge}>{displayLabel(a.status)}</span>
                     <p>
-                      {a.name} · {a.email} · Interés: {a.requested_plan}
+                      {a.name} · {a.email} · Interés:{" "}
+                      {displayLabel(a.requested_plan)}
                     </p>
                     <details>
                       <summary>Revisar datos del negocio</summary>
-                      <dl className={s.grid}>
+                      <dl className={s.businessDetails}>
                         {Object.entries(a.business_data).map(([key, value]) => (
                           <div key={key}>
-                            <dt>{key}</dt>
-                            <dd>{String(value ?? "—")}</dd>
+                            <dt>{businessFields[key] ?? displayLabel(key)}</dt>
+                            <dd>{displayValue(value)}</dd>
                           </div>
                         ))}
                       </dl>
@@ -218,9 +222,9 @@ export function InternalConsole({
                             ).submitter?.getAttribute("value");
                             if (
                               action === "reject" &&
-                              !await confirmAction(
+                              !(await confirmAction(
                                 "¿Rechazar esta solicitud? La decisión quedará auditada.",
-                              )
+                              ))
                             )
                               return;
                             void run(
@@ -267,9 +271,10 @@ export function InternalConsole({
                 {organizations.map((o) => (
                   <article className={s.card} key={o.id}>
                     <h2>{o.name}</h2>
-                    <span className={s.badge}>{o.status}</span>
+                    <span className={s.badge}>{displayLabel(o.status)}</span>
                     <p>
-                      {o.plan} · {o.source} · {o.users} usuarios
+                      {displayLabel(o.plan)} · {displayLabel(o.source)} ·{" "}
+                      {o.users} usuarios
                       {o.requested_plan
                         ? ` · Cambio solicitado: ${o.requested_plan}`
                         : ""}
@@ -340,9 +345,9 @@ export function InternalConsole({
                           e.preventDefault();
                           const f = new FormData(e.currentTarget);
                           if (
-                            !await confirmAction(
+                            !(await confirmAction(
                               "¿Cambiar el estado de acceso de esta empresa?",
-                            )
+                            ))
                           )
                             return;
                           void run(
@@ -392,7 +397,12 @@ export function InternalConsole({
                 {plans.map((p) => (
                   <section className={s.card} key={p.code}>
                     <h2>{p.name}</h2>
-                    {canBill && p.code !== "FREE" && <PriceEditor plan={p} />}
+                    {canBill && p.code !== "FREE" && (
+                      <>
+                        <PriceEditor plan={p} />
+                        <PriceEditor plan={p} period="YEARLY" />
+                      </>
+                    )}
                     {p.entitlements.map((f) => (
                       <form
                         className={s.form}

@@ -349,6 +349,11 @@ try {
     body: { ...roleBody, permissions: [] },
   });
   await call("/api/v1/customers", { cookie: custom, status: 403 });
+  // Lite has two seats. Removing this member frees a seat for the invitation.
+  await call("/api/v1/members/" + member, {
+    method: "DELETE",
+    cookie: a.cookie,
+  });
   // Invite a verified account; wrong identity cannot accept, replay rejected.
   const invited = `invited-${randomUUID()}@example.invalid`;
   await call("/api/auth/register", {
@@ -498,6 +503,67 @@ try {
     "FREE",
   );
   checks++;
+  // Annual checkout has its own configurable price and extends by twelve months.
+  await call("/api/internal/admin/prices", {
+    method: "PATCH",
+    cookie: admin,
+    body: {
+      plan: "LITE",
+      period: "YEARLY",
+      priceCents: 1500000,
+      currency: "ARS",
+      enabled: true,
+    },
+  });
+  const annualKey = randomUUID();
+  const annual = (
+    await call("/api/v1/billing/checkout", {
+      method: "POST",
+      cookie: b.cookie,
+      body: { plan: "LITE", period: "YEARLY", idempotencyKey: annualKey },
+    })
+  ).data;
+  await call("/api/v1/billing/checkout", {
+    method: "POST",
+    cookie: b.cookie,
+    body: { plan: "LITE", period: "MONTHLY", idempotencyKey: annualKey },
+    status: 409,
+  });
+  const annualPayment = {
+    ...payment,
+    id: "9988776655",
+    external_reference: annual.id,
+    transaction_amount: 15000,
+  };
+  await webhook(annualPayment);
+  const annualSub = (await call("/api/v1/subscription", { cookie: b.cookie }))
+    .data.subscription;
+  const expires = new Date(annualSub.expires_at);
+  assert(expires.getTime() > Date.now() + 364 * 86400000);
+  assert(expires.getTime() < Date.now() + 367 * 86400000);
+  checks += 2;
+  await webhook(annualPayment);
+  assert.equal(
+    (await call("/api/v1/subscription", { cookie: b.cookie })).data.subscription
+      .expires_at,
+    annualSub.expires_at,
+  );
+  checks++;
+  const annualHistory = (
+    await call("/api/v1/billing/history", { cookie: b.cookie })
+  ).data;
+  assert.equal(annualHistory[0].billing_period, "YEARLY");
+  assert.equal(Number(annualHistory[0].amount_cents), 1500000);
+  checks += 2;
+  await page.goto(base + "/plans");
+  await expect(
+    page.getByRole("link", { name: "NUBRA Internal", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Anual", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Anual", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  checks += 2;
   console.log(
     `PASS: ${checks} roles, invitation, Mercado Pago and visual checks (local provider fixture; no charges).`,
   );

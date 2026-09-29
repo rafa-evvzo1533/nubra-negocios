@@ -485,7 +485,7 @@ try {
     page
       .getByRole("article")
       .filter({ has: page.getByRole("heading", { name: "Negocio navegador" }) })
-      .getByText("APPROVED", { exact: true }),
+      .getByText("Aprobada", { exact: true }),
   ).toBeVisible();
   assert.equal(
     await page.evaluate(

@@ -1,4 +1,5 @@
 "use client";
+import { displayLabel } from "@/domain/display";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Building2,
@@ -525,7 +526,7 @@ function AuditView({ organizationId }: { organizationId: string }) {
           key={log.id}
           style={{ padding: 12, borderBottom: "1px solid var(--line)" }}
         >
-          {log.action} · {new Date(log.created_at).toLocaleString("es-AR")}
+          {displayLabel(log.action)} · {new Date(log.created_at).toLocaleString("es-AR")}
         </p>
       ))}
       {logs?.length === 0 && <p>Sin actividad registrada.</p>}

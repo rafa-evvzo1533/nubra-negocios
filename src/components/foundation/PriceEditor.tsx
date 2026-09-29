@@ -5,8 +5,16 @@ import { api } from "./AccountForms";
 import s from "./Foundation.module.css";
 export function PriceEditor({
   plan,
+  period = "MONTHLY",
 }: {
-  plan: { code: string; price_cents: number | null; checkout_enabled: boolean };
+  plan: {
+    code: string;
+    price_cents: number | null;
+    checkout_enabled: boolean;
+    annual_price_cents?: number | null;
+    annual_checkout_enabled?: boolean;
+  };
+  period?: "MONTHLY" | "YEARLY";
 }) {
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
@@ -20,6 +28,7 @@ export function PriceEditor({
     try {
       await api("/api/internal/admin/prices", "PATCH", {
         plan: plan.code,
+        period,
         priceCents: f.get("price")
           ? Math.round(Number(f.get("price")) * 100)
           : null,
@@ -38,17 +47,25 @@ export function PriceEditor({
   }
   return (
     <form className={`${s.form} ${s.priceEditor}`} onSubmit={save}>
-      <h3>Precio y pago online</h3>
+      <h3>Precio {period === "YEARLY" ? "anual" : "mensual"} y pago online</h3>
       <div className={s.grid}>
         <label>
-          Precio en ARS · 30 días
+          Precio en ARS · {period === "YEARLY" ? "año completo" : "mes"}
           <input
             name="price"
             type="number"
             min="0.01"
             max="1000000"
             step="0.01"
-            defaultValue={plan.price_cents ? plan.price_cents / 100 : ""}
+            defaultValue={
+              (period === "YEARLY" ? plan.annual_price_cents : plan.price_cents)
+                ? Number(
+                    period === "YEARLY"
+                      ? plan.annual_price_cents
+                      : plan.price_cents,
+                  ) / 100
+                : ""
+            }
             placeholder="A definir"
           />
         </label>
@@ -56,9 +73,13 @@ export function PriceEditor({
           <input
             type="checkbox"
             name="enabled"
-            defaultChecked={plan.checkout_enabled}
+            defaultChecked={
+              period === "YEARLY"
+                ? plan.annual_checkout_enabled
+                : plan.checkout_enabled
+            }
           />
-          Habilitar compra de este plan
+          Habilitar compra {period === "YEARLY" ? "anual" : "mensual"}
         </label>
       </div>
       <p>

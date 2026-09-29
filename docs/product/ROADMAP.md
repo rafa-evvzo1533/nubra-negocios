@@ -8,7 +8,7 @@ Completada en REPOSITORY_AUDIT.md: arquitectura existente, seguridad, persistenc
 
 Implementado: migraciones reproducibles, registro/email, solicitudes, aprobación/rechazo/información, workspace, miembros/roles/permisos, personal NUBRA separado, planes/capacidades/consumo/historial, términos/privacidad/aceptación, auditoría y paneles. El core recibido ya aporta clientes, catálogo, stock, ventas, pagos y caja. Se añadieron idempotencia y cancelación no cobrada, CSV aislado y pruebas del flujo.
 
-Pendiente de cierre completo de foundation: invitaciones por email sin contraseña compartida, MFA para personal, roles personalizados y permisos de acción granulares, administrador de sesiones, reaceptación legal para cuentas activas, estados/comunicaciones por outbox, flujo guiado de onboarding y logo seguro.
+También implementado: invitaciones por email, roles personalizados, permisos por acción, gestión de sesiones y logo oficial. Pendiente: MFA para personal, reaceptación legal para cuentas activas, comunicaciones por outbox y onboarding guiado.
 
 ## Fase 2 — Core Business
 
@@ -16,15 +16,15 @@ Completar Opportunity/Pipeline/Lead independientes y timeline unificado; servici
 
 ## Fase 3 — Operations
 
-Proveedores, compras/recepción parcial, tareas, agenda, archivos S3 con cuarentena/MIME/antivirus y notificaciones persistentes. CSV con mapeo, validación, preview e importación confirmada. Invitaciones y equipos según cuotas.
+Proveedores, venta rápida, cuentas corrientes y equipos según cuotas ya están implementados. Pendiente: compras/recepción parcial, tareas, agenda, archivos S3 con cuarentena/MIME/antivirus, notificaciones persistentes y CSV con mapeo, validación, vista previa e importación confirmada.
 
 ## Fase 4 — Subscriptions
 
-Foundation comercial ya operativa. Completar checkout y proveedor de pagos con webhooks firmados y deduplicación, contratos, promociones, renovaciones, grace periods y conciliación. Feature flags por organización/usuario/beta. No considerar los nombres de features como implementación de funcionalidades futuras.
+Checkout Pro mensual/anual, webhooks firmados, deduplicación, activación y conciliación al volver ya están implementados. Pendiente: débito recurrente autorizado, contratos/promociones avanzados, períodos de gracia y conciliación operativa programada. Feature flags por organización/usuario/beta. No considerar los nombres de features como implementación de funcionalidades futuras.
 
 ## Fase 5 — Analytics
 
-Reportes filtrables, comparaciones de períodos, widgets, objetivos y métricas por sucursal/producto/empleado. Diferenciar flujo de caja, facturación y resultado contable.
+Reportes por período, productos y margen bruto estimado ya están implementados. Pendiente: comparación de períodos, widgets, objetivos y métricas por sucursal/empleado. Diferenciar flujo de caja, facturación y resultado contable.
 
 ## Fase 6 — Automation
 
@@ -44,4 +44,4 @@ MFA obligatorio de personal, pentest, rate limiting en ingress, control de paylo
 
 ## Próximo bloque recomendado
 
-Cerrar foundation: invitaciones seguras, MFA/recuperación de personal, autorización granular y reaceptación legal, más notificaciones mediante outbox. Después completar operaciones de inventario por depósito y devoluciones de ventas cobradas.
+MFA/recuperación de personal, reaceptación legal y notificaciones mediante outbox. Para producto: compras/recepción, devoluciones de ventas cobradas e importación validada. Consultar [propuestas](FEATURE_IDEAS.md) y [estado vigente](../project-status.md).

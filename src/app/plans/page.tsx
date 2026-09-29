@@ -33,7 +33,7 @@ export default async function Page() {
               <p>
                 Desde la sección de suscripciones de tu negocio. Cuando el plan
                 tenga un precio habilitado, podrás pagar en Mercado Pago por un
-                período de 30 días.
+                mes o un año completo, según la opción elegida.
               </p>
             </div>
             <div>
@@ -45,7 +45,7 @@ export default async function Page() {
               </p>
               <h3>¿La renovación es automática?</h3>
               <p>
-                No. Cada pago habilita un período de 30 días. Podés renovar
+                No. Cada pago habilita un mes o un año. Podés renovar
                 desde tu negocio al finalizar ese período, sin débitos
                 automáticos.
               </p>

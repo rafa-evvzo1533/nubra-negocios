@@ -154,7 +154,7 @@ try {
     await new Promise((r) => setTimeout(r, 500));
   }
   if (!ready) throw new Error("Test server did not start");
-  await run("--test", ["tests/csv.test.mjs"]);
+  await run("--test", ["tests/csv.test.mjs", "tests/billing-period.test.mjs"]);
   if (process.argv[2] !== "security") {
     await import("./foundation.mjs");
     await import("./roles-billing.mjs");

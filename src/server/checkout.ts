@@ -6,6 +6,7 @@ import { postgres } from "./postgres";
 import { transaction } from "./transactions";
 import { HttpError } from "./http";
 import { planCode } from "./subscriptions";
+import { periodEnd, type BillingPeriod } from "@/domain/billing-period";
 import {
   billingReady,
   MercadoPagoProvider,
@@ -20,6 +21,7 @@ export async function configurePrice(body: unknown) {
       priceCents: z.number().int().positive().max(100000000).nullable(),
       currency: z.literal("ARS"),
       enabled: z.boolean(),
+      period: z.enum(["MONTHLY", "YEARLY"]).default("MONTHLY"),
     })
     .strict()
     .parse(body);
@@ -27,7 +29,9 @@ export async function configurePrice(body: unknown) {
     throw new HttpError(400, "Cargá un precio antes de habilitar el pago");
   return transaction(async (db) => {
     await db.query(
-      "UPDATE plans SET price_cents=$2,currency=$3,checkout_enabled=$4,updated_at=NOW() WHERE code=$1",
+      v.period === "YEARLY"
+        ? "UPDATE plans SET annual_price_cents=$2,currency=$3,annual_checkout_enabled=$4,updated_at=NOW() WHERE code=$1"
+        : "UPDATE plans SET price_cents=$2,currency=$3,checkout_enabled=$4,updated_at=NOW() WHERE code=$1",
       [v.plan, v.priceCents, v.currency, v.enabled],
     );
     await db.query(
@@ -43,7 +47,11 @@ export async function checkout(body: unknown) {
   if (!["OWNER", "ADMINISTRATOR", "ADMIN"].includes(ctx.role))
     throw new HttpError(403, "Solo los responsables pueden contratar el plan");
   const v = z
-    .object({ plan: planCode.exclude(["FREE"]), idempotencyKey: z.uuid() })
+    .object({
+      plan: planCode.exclude(["FREE"]),
+      idempotencyKey: z.uuid(),
+      period: z.enum(["MONTHLY", "YEARLY"]).default("MONTHLY"),
+    })
     .strict()
     .parse(body);
   if (!billingReady())
@@ -58,6 +66,7 @@ export async function checkout(body: unknown) {
       await db.query<{
         id: string;
         code: string;
+        billing_period: string;
         status: string;
         checkout_url: string | null;
         updated_at: Date;
@@ -67,10 +76,10 @@ export async function checkout(body: unknown) {
       )
     ).rows[0];
     if (prior) {
-      if (prior.code !== v.plan)
+      if (prior.code !== v.plan || prior.billing_period !== v.period)
         throw new HttpError(
           409,
-          "La solicitud de pago ya corresponde a otro plan",
+          "La solicitud de pago ya corresponde a otro plan o período",
         );
       if (prior.status === "PAID")
         throw new HttpError(409, "Este pago ya fue acreditado");
@@ -121,7 +130,9 @@ export async function checkout(body: unknown) {
         price_cents: number;
         currency: string;
       }>(
-        "SELECT id,name,price_cents,currency FROM plans WHERE code=$1 AND checkout_enabled AND price_cents>0",
+        v.period === "YEARLY"
+          ? "SELECT id,name,annual_price_cents AS price_cents,currency FROM plans WHERE code=$1 AND annual_checkout_enabled AND annual_price_cents>0"
+          : "SELECT id,name,price_cents,currency FROM plans WHERE code=$1 AND checkout_enabled AND price_cents>0",
         [v.plan],
       )
     ).rows[0];
@@ -132,7 +143,7 @@ export async function checkout(body: unknown) {
       );
     const id = randomUUID();
     await db.query(
-      "INSERT INTO billing_orders(id,organization_id,user_id,plan_id,amount_cents,currency,idempotency_key) VALUES($1,$2,$3,$4,$5,$6,$7)",
+      "INSERT INTO billing_orders(id,organization_id,user_id,plan_id,amount_cents,currency,idempotency_key,billing_period) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
       [
         id,
         ctx.organizationId,
@@ -141,6 +152,7 @@ export async function checkout(body: unknown) {
         plan.price_cents,
         plan.currency,
         v.idempotencyKey,
+        v.period,
       ],
     );
     return { id, plan };
@@ -155,6 +167,7 @@ export async function checkout(body: unknown) {
       amount: order.plan.price_cents,
       currency: order.plan.currency,
       email: ctx.email,
+      period: v.period,
     });
     await postgres.query(
       "UPDATE billing_orders SET preference_id=$2,checkout_url=$3,status='PENDING',updated_at=NOW() WHERE id=$1 AND status='CREATING'",
@@ -203,6 +216,7 @@ export async function reconcilePayment(payment: VerifiedPayment) {
         status: string;
         payment_id: string | null;
         paid_at: Date | null;
+        billing_period: BillingPeriod | "LEGACY_30_DAYS";
       }>(
         `SELECT o.*,p.code FROM billing_orders o JOIN plans p ON p.id=o.plan_id WHERE o.id=$1 FOR UPDATE OF o`,
         [reference.data],
@@ -261,7 +275,7 @@ export async function reconcilePayment(payment: VerifiedPayment) {
         current.expires_at > new Date()
           ? current.expires_at
           : new Date();
-      const end = new Date(start.getTime() + 30 * 86400000);
+      const end = periodEnd(start, order.billing_period);
       await db.query(
         "UPDATE billing_orders SET status='PAID',payment_id=$2,paid_at=NOW(),period_end=$3,updated_at=NOW() WHERE id=$1",
         [order.id, payment.id, end],
@@ -335,7 +349,7 @@ export async function billingHistory() {
     throw new HttpError(403, "Permisos insuficientes");
   return (
     await postgres.query(
-      `SELECT o.id,p.name,o.amount_cents,o.currency,o.status,o.created_at,o.paid_at,o.period_end,CASE WHEN o.status='PENDING' AND o.created_at>NOW()-INTERVAL '24 hours' THEN o.checkout_url END AS checkout_url FROM billing_orders o JOIN plans p ON p.id=o.plan_id WHERE o.organization_id=$1 ORDER BY o.created_at DESC LIMIT 50`,
+      `SELECT o.id,p.name,o.amount_cents,o.currency,o.status,o.created_at,o.paid_at,o.period_end,o.billing_period,CASE WHEN o.status='PENDING' AND o.created_at>NOW()-INTERVAL '24 hours' THEN o.checkout_url END AS checkout_url FROM billing_orders o JOIN plans p ON p.id=o.plan_id WHERE o.organization_id=$1 ORDER BY o.created_at DESC LIMIT 50`,
       [ctx.organizationId],
     )
   ).rows;

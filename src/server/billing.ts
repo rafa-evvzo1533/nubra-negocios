@@ -6,6 +6,7 @@ export interface BillingProvider {
     amount: number;
     currency: string;
     email: string;
+    period: "MONTHLY" | "YEARLY";
   }): Promise<{ url: string; reference: string }>;
   payment(id: string): Promise<VerifiedPayment>;
 }

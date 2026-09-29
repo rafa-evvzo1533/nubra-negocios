@@ -87,6 +87,7 @@ export class MercadoPagoProvider implements BillingProvider {
     amount: number;
     currency: string;
     email: string;
+    period: "MONTHLY" | "YEARLY";
   }) {
     const base = new URL(process.env.APP_URL!);
     if (
@@ -111,7 +112,9 @@ export class MercadoPagoProvider implements BillingProvider {
             items: [
               {
                 id: input.id,
-                title: input.name + " · 30 días",
+                title:
+                  input.name +
+                  (input.period === "YEARLY" ? " · anual" : " · mensual"),
                 quantity: 1,
                 currency_id: input.currency,
                 unit_price: input.amount / 100,

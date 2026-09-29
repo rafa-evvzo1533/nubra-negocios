@@ -4,12 +4,12 @@
 
 | Capacidad inicial | Free | Lite | Business | Enterprise |
 | --- | ---: | ---: | ---: | ---: |
-| Usuarios | 1 | 3 | 15 | 100 |
-| Clientes | 50 | 500 | 10.000 | 500.000 |
-| Productos | 100 | 1.000 | 10.000 | 500.000 |
-| Proveedores | 10 | 100 | 1.000 | 100.000 |
-| Ventas/mes | 100 | 1.000 | 10.000 | 100.000 |
-| Exportaciones CSV/mes | 2 | 20 | 200 | 2.000 |
+| Usuarios | 1 | 2 | 5 | 10 |
+| Clientes | 30 | 150 | 500 | 1.000 |
+| Productos | 50 | 250 | 600 | 1.500 |
+| Proveedores | 5 | 20 | 60 | 150 |
+| Ventas/mes | 100 | 1.000 | 5.000 | 15.000 |
+| Exportaciones CSV/mes | 2 | 10 | 50 | 200 |
 
 Free no vence. Al alcanzar el límite, la creación que lo supera queda bloqueada y se indica ampliar el plan. Se conservan los datos, la lectura y las demás operaciones que aún tengan capacidad. Las ventas y exportaciones se renuevan por mes calendario UTC. Los registros existentes que ya superen la nueva capacidad no se borran. Los proveedores archivados cuentan dentro del total.
 
