@@ -2,7 +2,7 @@
 
 ## Decisión
 
-Monolito modular Next.js App Router, React, TypeScript strict y PostgreSQL mediante pg. Se conserva el acceso SQL que sostiene el core existente. CSS Modules mantiene el lenguaje visual; Tailwind está disponible. No se agrega una segunda librería de UI ni se sustituye el ORM durante esta migración funcional. Prisma es un diseño heredado parcial, no el esquema activo; no ejecutar db push.
+Monolito modular Next.js App Router, React, TypeScript strict y PostgreSQL mediante pg. Se conserva el acceso SQL que sostiene el core existente. CSS Modules mantiene el lenguaje visual; Tailwind está disponible. No se agrega una segunda librería de UI ni se sustituye el ORM durante esta migración funcional. Se eliminaron Prisma y su esquema heredado sin uso; la fuente del esquema continúa en `migrations/`.
 
 ## Límites de confianza
 

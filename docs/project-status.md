@@ -10,6 +10,7 @@ Actualizado: 2026-09-29. Este documento describe la entrega vigente; `archive/` 
 - Plan Free sin vencimiento: 1 usuario, 30 clientes, 50 productos, 5 proveedores, 100 ventas/mes y 2 exportaciones/mes. Capacidades configurables, igual que los otros planes; no se eliminan datos al alcanzar límites.
 - Mercado Pago Argentina: Checkout Pro, verificación de pago y activación automática por webhook; conciliación autenticada al volver del checkout, actualización del plan y notificación web. Precios configurables, sin valores comerciales inventados.
 - Notificaciones y confirmaciones dentro de la web, conservando avisos de cada módulo.
+- Corrección de cobertura de avisos: los módulos originales también emiten notificaciones flotantes al guardar; se mantienen visibles y descartables sobre los diálogos y al desplazarse.
 - Documentación organizada en arquitectura, ADR, despliegue, integraciones, operación, seguridad, pruebas, producto, legal e historial.
 - Períodos mensual y anual con importes independientes, contratos anteriores conservados, fin de mes/año con ajuste de día y activación automática después de verificar el pago.
 - Administración con campos/estados legibles en español; enlace NUBRA Internal retirado del inicio público.
@@ -19,9 +20,9 @@ También se conserva el trabajo previo solicitado: logo oficial, inicio y admini
 
 ## Configuración externa pendiente
 
-Los cobros públicos necesitan credenciales, vendedor, webhook, URL pública HTTPS y precios; ver [configuración](integrations/SUBSCRIPTIONS.md). La integración cobra un mes o un año y activa automáticamente al acreditar; **no realiza débito recurrente**. El correo necesita SMTP. Hostinger hPanel requiere PostgreSQL externo y configuración en la cuenta; el despliegue remoto no se realizó.
+Los cobros públicos necesitan credenciales, vendedor, webhook, URL pública HTTPS y precios; ver [configuración](integrations/SUBSCRIPTIONS.md). La integración cobra un mes o un año y activa automáticamente al acreditar; **no realiza débito recurrente**. La [VPS está publicada](deployment/VPS_DEPLOYED.md), con HTTPS y SMTP de Hostinger verificados; el propietario confirmó la recepción del correo de registro. Cloud Hosting con hPanel conserva su guía alternativa, sin despliegue verificado en ese servicio.
 
-Persisten pendientes de la entrega de seguridad: MFA, proveedor de claves y migración del cifrado de campos existentes, backups administrados y restauración ensayada. El servicio de cifrado existe, pero no se presenta como si los datos históricos ya estuvieran cifrados. Los documentos legales conservan su revisión pendiente.
+Persisten pendientes de la entrega de seguridad: MFA, proveedor de claves y migración del cifrado de campos existentes, y copias externas a la VPS. El respaldo diario local y su restauración se probaron. El servicio de cifrado existe, pero no se presenta como si los datos históricos ya estuvieran cifrados. Los documentos legales conservan su revisión pendiente.
 
 ## Validación
 

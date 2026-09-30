@@ -16,15 +16,17 @@ export function Dialog({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const titleId=useId();
+  const titleId = useId();
   useEffect(() => {
     const dialog = ref.current;
     const previous = document.activeElement as HTMLElement | null;
     dialog?.showModal();
+    window.dispatchEvent(new Event("nubra:dialog"));
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       dialog?.close();
+      window.dispatchEvent(new Event("nubra:dialog"));
       document.body.style.overflow = overflow;
       previous?.focus();
     };

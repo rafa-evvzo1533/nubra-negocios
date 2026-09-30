@@ -30,9 +30,14 @@ if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0")
   problems.push("TLS certificate verification cannot be disabled.");
 try {
   const url = new URL(process.env.DATABASE_URL);
-  if (["localhost", "127.0.0.1"].includes(url.hostname))
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  const localVps = process.env.DEPLOYMENT_TARGET === "vps" && loopback;
+  if (loopback && !localVps)
     problems.push("Use your external PostgreSQL host.");
-  if (!["verify-full", "verify-ca"].includes(url.searchParams.get("sslmode")))
+  if (
+    !localVps &&
+    !["verify-full", "verify-ca"].includes(url.searchParams.get("sslmode"))
+  )
     problems.push(
       "Use PostgreSQL sslmode=verify-full (or verify-ca with the provider CA).",
     );

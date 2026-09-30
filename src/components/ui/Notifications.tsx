@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, X, TriangleAlert } from "lucide-react";
 import { Dialog } from "./Dialog";
 type Notice = {
@@ -9,6 +10,7 @@ type Notice = {
 };
 type Confirmation = { message: string; resolve: (value: boolean) => void };
 export function notify(message: string, kind: Notice["kind"] = "success") {
+  if (!message.trim()) return;
   window.dispatchEvent(
     new CustomEvent("nubra:notice", {
       detail: { id: crypto.randomUUID(), message, kind },
@@ -24,17 +26,28 @@ export function confirmAction(message: string): Promise<boolean> {
 }
 export function Notifications() {
   const [items, setItems] = useState<Notice[]>([]),
-    [pending, setPending] = useState<Confirmation | null>(null);
+    [pending, setPending] = useState<Confirmation | null>(null),
+    [host, setHost] = useState<Element | null>(null);
   useEffect(() => {
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let current: Confirmation | null = null;
+    function locateHost() {
+      const dialogs = document.querySelectorAll("dialog[open]");
+      setHost(dialogs.item(dialogs.length - 1) ?? document.body);
+    }
     function notice(event: Event) {
       const n = (event as CustomEvent<Notice>).detail;
-      setItems((v) => [...v.slice(-2), n]);
+      locateHost();
+      setItems((v) => [
+        ...v
+          .filter((x) => x.message !== n.message || x.kind !== n.kind)
+          .slice(-2),
+        n,
+      ]);
       const timer = setTimeout(() => {
         setItems((v) => v.filter((x) => x.id !== n.id));
         timers.delete(timer);
-      }, 7000);
+      }, 10000);
       timers.add(timer);
     }
     function confirm(event: Event) {
@@ -44,9 +57,11 @@ export function Notifications() {
     }
     window.addEventListener("nubra:notice", notice);
     window.addEventListener("nubra:confirm", confirm);
+    window.addEventListener("nubra:dialog", locateHost);
     return () => {
       window.removeEventListener("nubra:notice", notice);
       window.removeEventListener("nubra:confirm", confirm);
+      window.removeEventListener("nubra:dialog", locateHost);
       timers.forEach(clearTimeout);
       current?.resolve(false);
     };
@@ -57,29 +72,14 @@ export function Notifications() {
   }
   return (
     <>
-      <aside className="notifications" aria-label="Notificaciones">
-        {items.map((n) => (
-          <div
-            key={n.id}
-            role={n.kind === "error" ? "alert" : "status"}
-            className={n.kind === "error" ? "notice-error" : "notice-success"}
-          >
-            {n.kind === "error" ? (
-              <TriangleAlert size={17} />
-            ) : (
-              <Check size={17} />
-            )}
-            <span>{n.message}</span>
-            <button
-              className="icon-button"
-              aria-label="Cerrar notificación"
-              onClick={() => setItems((v) => v.filter((x) => x.id !== n.id))}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ))}
-      </aside>
+      {host &&
+        createPortal(
+          <NoticeList
+            items={items}
+            onDismiss={(id) => setItems((v) => v.filter((x) => x.id !== id))}
+          />,
+          host,
+        )}
       {pending && (
         <Dialog title="Confirmar acción" onClose={() => decide(false)}>
           <p>{pending.message}</p>
@@ -94,5 +94,59 @@ export function Notifications() {
         </Dialog>
       )}
     </>
+  );
+}
+
+// A popover inside the active dialog stays visible and interactive above its backdrop.
+function NoticeList({
+  items,
+  onDismiss,
+}: {
+  items: Notice[];
+  onDismiss: (id: string) => void;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    // A save can close the dialog before the portal moves back to document.body.
+    // showPopover throws if that dialog has already been removed from the DOM.
+    if (!element?.isConnected) return;
+    if (element.matches(":popover-open")) element.hidePopover();
+    if (items.length) element.showPopover();
+    return () => {
+      if (element.isConnected && element.matches(":popover-open"))
+        element.hidePopover();
+    };
+  }, [items]);
+  return (
+    <aside
+      ref={ref}
+      popover="manual"
+      className="notifications"
+      aria-label="Notificaciones"
+    >
+      {items.map((n) => (
+        <div
+          key={n.id}
+          role={n.kind === "error" ? "alert" : "status"}
+          className={n.kind === "error" ? "notice-error" : "notice-success"}
+        >
+          {n.kind === "error" ? (
+            <TriangleAlert size={17} />
+          ) : (
+            <Check size={17} />
+          )}
+          <span>{n.message}</span>
+          <button
+            className="icon-button"
+            aria-label="Cerrar notificación"
+            type="button"
+            onClick={() => onDismiss(n.id)}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      ))}
+    </aside>
   );
 }

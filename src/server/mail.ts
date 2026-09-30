@@ -9,7 +9,7 @@ export function mailConfig() {
   )
     throw new HttpError(
       503,
-      "La recuperación por correo todavía no está configurada. Contactá a Nubra.",
+      "El envío de correos no está disponible en este momento. Probá más tarde.",
     );
   const base = new URL(process.env.APP_URL);
   if (
@@ -18,6 +18,14 @@ export function mailConfig() {
   )
     throw new HttpError(503, "Configuración de correo inválida");
   return { base, host: process.env.SMTP_HOST, from: process.env.MAIL_FROM };
+}
+export function isMailConfigured() {
+  try {
+    mailConfig();
+    return true;
+  } catch {
+    return false;
+  }
 }
 export async function sendResetEmail(email: string, token: string) {
   return sendTokenEmail(email, token, false);

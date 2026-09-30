@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../foundation/AccountForms";
 import type { CustomRole } from "./RolesManager";
@@ -14,8 +15,7 @@ export function Invitations({ roles }: { roles: CustomRole[] }) {
   const [items, setItems] = useState<Invite[]>([]),
     [revision, setRevision] = useState(0),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [message, setMessage] = useState("");
+    [error, setError] = useState("");
   useEffect(() => {
     let active = true;
     api("/api/v1/invitations", "GET")
@@ -36,7 +36,6 @@ export function Invitations({ roles }: { roles: CustomRole[] }) {
       role = String(f.get("role"));
     setBusy(true);
     setError("");
-    setMessage("");
     try {
       await api("/api/v1/invitations", "POST", {
         email: f.get("email"),
@@ -46,7 +45,7 @@ export function Invitations({ roles }: { roles: CustomRole[] }) {
       });
       form.reset();
       setRevision((r) => r + 1);
-      setMessage("Invitación enviada por email. Vence en 7 días.");
+      notify("Invitación enviada por email. Vence en 7 días.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     } finally {
@@ -59,6 +58,7 @@ export function Invitations({ roles }: { roles: CustomRole[] }) {
     try {
       await api("/api/v1/invitations/" + id, "DELETE");
       setRevision((r) => r + 1);
+      notify("Invitación revocada.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     } finally {
@@ -77,11 +77,7 @@ export function Invitations({ roles }: { roles: CustomRole[] }) {
           {error}
         </p>
       )}
-      {message && (
-        <p role="status" className="notice-success">
-          {message}
-        </p>
-      )}
+
       <form className={s.form} onSubmit={send}>
         <div className={s.grid}>
           <label>

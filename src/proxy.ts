@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
+  // The reverse proxy terminates HTTPS; Next may see the internal HTTP origin.
+  // Use the configured public origin, never client-supplied forwarded headers.
+  const publicOrigin =
+    process.env.NODE_ENV === "production" && process.env.APP_URL
+      ? new URL(process.env.APP_URL).origin
+      : request.nextUrl.origin;
   if (
     request.nextUrl.pathname.startsWith("/api/") &&
     !["GET", "HEAD", "OPTIONS"].includes(request.method)
@@ -12,7 +18,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.json({ error: "Se requiere JSON" }, { status: 415 });
     const origin = request.headers.get("origin");
     if (
-      (origin && origin !== request.nextUrl.origin) ||
+      (origin && origin !== publicOrigin) ||
       request.headers.get("sec-fetch-site") === "cross-site"
     ) {
       return NextResponse.json(
@@ -34,7 +40,7 @@ export function proxy(request: NextRequest) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()",
   );
-  if (request.nextUrl.protocol === "https:")
+  if (publicOrigin.startsWith("https:"))
     response.headers.set("Strict-Transport-Security", "max-age=31536000");
   return response;
 }

@@ -1,0 +1,25 @@
+[Unit]
+Description=Nubra Negocios
+After=network.target docker.service postgresql.service
+
+[Service]
+Type=simple
+User=nubra-negocios
+Group=nubra-negocios
+WorkingDirectory=/opt/nubra-negocios/current
+EnvironmentFile=/etc/nubra-negocios/runtime.env
+ExecStartPre=/opt/nubra-negocios/node/bin/node scripts/check-deployment.mjs
+ExecStart=/opt/nubra-negocios/node/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3200
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/nubra-negocios/current/.next
+
+[Install]
+WantedBy=multi-user.target

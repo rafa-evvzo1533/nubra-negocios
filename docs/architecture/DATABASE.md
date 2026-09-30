@@ -2,7 +2,7 @@
 
 ## Fuente operativa
 
-PostgreSQL y migraciones SQL versionadas; pg es el cliente activo. prisma/schema.prisma es un diseño parcial heredado: no usar Prisma db push contra esta base. Las migraciones conservan tablas y registros existentes. El runtime verifica schema_migrations y no ejecuta DDL.
+PostgreSQL y migraciones SQL versionadas; pg es el cliente activo. Se retiraron el esquema parcial de Prisma y su dependencia porque no tenían consumidores. Las migraciones conservan tablas y registros existentes. El runtime verifica schema_migrations y no ejecuta DDL.
 
 | Migración | Contenido |
 | --- | --- |

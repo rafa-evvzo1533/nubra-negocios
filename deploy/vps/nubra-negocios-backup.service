@@ -1,0 +1,9 @@
+[Unit]
+Description=Back up Nubra Negocios PostgreSQL
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nubra-negocios/backup.sh
+UMask=0077

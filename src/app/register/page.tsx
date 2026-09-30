@@ -1,9 +1,12 @@
 import { PublicShell } from "@/components/foundation/PublicShell";
 import { RegisterForm } from "@/components/foundation/AccountForms";
-export default function Page() {
+import { isMailConfigured } from "@/server/mail";
+import { connection } from "next/server";
+export default async function Page() {
+  await connection();
   return (
     <PublicShell>
-      <RegisterForm />
+      <RegisterForm available={isMailConfigured()} />
     </PublicShell>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { confirmAction } from "../ui/Notifications";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -57,7 +58,6 @@ export function InternalConsole({
   const router = useRouter(),
     [tab, setTab] = useState("applications"),
     [error, setError] = useState(""),
-    [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
   const canReview =
       !!actor &&
@@ -70,10 +70,9 @@ export function InternalConsole({
   async function run(path: string, body: unknown, method = "POST") {
     setBusy(true);
     setError("");
-    setMessage("");
     try {
       await api(path, method, body);
-      setMessage("Cambio guardado y registrado en auditoría.");
+      notify("Cambio guardado y registrado en auditoría.");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo conectar");
@@ -119,11 +118,7 @@ export function InternalConsole({
             {error}
           </p>
         )}
-        {message && (
-          <p className="notice-success" role="status">
-            {message}
-          </p>
-        )}
+
         {!actor ? (
           <form className={`${s.card} ${s.form} ${s.narrow}`} onSubmit={login}>
             <h2>Ingresar como personal NUBRA</h2>

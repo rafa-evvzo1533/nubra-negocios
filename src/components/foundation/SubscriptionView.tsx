@@ -159,6 +159,7 @@ export function SubscriptionView({ data }: { data: Data }) {
           plan: selected.code,
         });
         setMessage(result.message);
+        notify(result.message);
         setSelected(null);
       }
     } catch (e) {

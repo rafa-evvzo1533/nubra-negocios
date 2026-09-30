@@ -1,7 +1,7 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { useEffect, useState } from "react";
 import {
-  Check,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -109,7 +109,7 @@ export function BusinessModule({
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+
   const key = JSON.stringify([resource, query, filter, page, revision]);
   const loading = result?.key !== key;
   useEffect(() => {
@@ -137,7 +137,7 @@ export function BusinessModule({
     setCompose(false);
     setEditing(undefined);
     setPage(1);
-    setSuccess("Cambios guardados correctamente.");
+    notify("Cambios guardados correctamente.");
     changed();
   }
   async function remove() {
@@ -148,7 +148,7 @@ export function BusinessModule({
       await api(`${resource}/${deleting.id}`, { method: "DELETE" });
       setDeleting(null);
       setPage(1);
-      setSuccess("Registro eliminado.");
+      notify("Registro eliminado.");
       changed();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error de conexión");
@@ -187,19 +187,7 @@ export function BusinessModule({
           )
         }
       />
-      {success && (
-        <div role="status" className="notice-success">
-          <Check size={17} />
-          {success}
-          <button
-            className="icon-button"
-            aria-label="Cerrar aviso"
-            onClick={() => setSuccess("")}
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
+
       <div className={styles.listPanel}>
         {exportable && resource !== "quotes" && (
           <button

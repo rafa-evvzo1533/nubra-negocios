@@ -400,4 +400,46 @@ tbody tr:hover {
   }
 }
 
-.notifications{position:fixed;top:18px;left:50%;transform:translateX(-50%);width:min(760px,calc(100vw - 32px));z-index:1000;display:grid;gap:10px;pointer-events:none}.notifications>div{display:flex;align-items:center;gap:12px;margin:0;box-shadow:var(--shadow-panel);pointer-events:auto}.notifications>div>span{flex:1}.confirmation-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
+.notifications {
+  position: fixed;
+  inset: 18px auto auto 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  z-index: 1000;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+.notifications:not(:popover-open) {
+  display: none;
+}
+.notifications > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  box-shadow: var(--shadow-panel);
+  pointer-events: auto;
+}
+.notifications > div > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.notifications > div > svg,
+.notifications > div > button {
+  flex-shrink: 0;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}

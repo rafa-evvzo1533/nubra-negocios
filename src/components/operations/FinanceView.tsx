@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, send, money, date } from "../business/client";
 import styles from "../business/BusinessModule.module.css";
@@ -55,7 +56,7 @@ export function FinanceView({
   const [data, setData] = useState<Summary | null>(null);
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+
   const [busy, setBusy] = useState(false);
   const [paymentKey, setPaymentKey] = useState("");
   const [movementKey, setMovementKey] = useState("");
@@ -78,7 +79,6 @@ export function FinanceView({
     const f = new FormData(form);
     setBusy(true);
     setError("");
-    setMessage("");
     const cents = (name: string) => Math.round(Number(f.get(name)) * 100);
     const open = data?.cash.find((c) => !c.closed_at);
     try {
@@ -116,7 +116,7 @@ export function FinanceView({
       }
       form.reset();
       setRevision((v) => v + 1);
-      setMessage("Operación registrada correctamente.");
+      notify("Operación registrada correctamente.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error de conexión");
     } finally {
@@ -139,11 +139,7 @@ export function FinanceView({
           {error}
         </p>
       )}
-      {message && (
-        <p className="notice-success" role="status">
-          {message}
-        </p>
-      )}
+
       {!data ? (
         <p>Cargando movimientos…</p>
       ) : (

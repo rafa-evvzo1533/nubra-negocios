@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "./AccountForms";
@@ -17,7 +18,6 @@ export function PriceEditor({
   period?: "MONTHLY" | "YEARLY";
 }) {
   const [busy, setBusy] = useState(false),
-    [message, setMessage] = useState(""),
     [error, setError] = useState("");
   const router = useRouter();
   async function save(e: FormEvent<HTMLFormElement>) {
@@ -35,9 +35,7 @@ export function PriceEditor({
         currency: "ARS",
         enabled: f.get("enabled") === "on",
       });
-      setMessage(
-        "Precio guardado. Los pedidos ya iniciados conservan su importe.",
-      );
+      notify("Precio guardado. Los pedidos ya iniciados conservan su importe.");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
@@ -89,11 +87,7 @@ export function PriceEditor({
       <button className="primary-button" disabled={busy}>
         Guardar precio
       </button>
-      {message && (
-        <p className="notice-success" role="status">
-          {message}
-        </p>
-      )}
+
       {error && (
         <p className="notice-error" role="alert">
           {error}

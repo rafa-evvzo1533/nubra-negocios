@@ -47,12 +47,13 @@ export async function registerAccount(body: unknown) {
     })
     .strict()
     .parse(body);
+  // A configuration outage must not consume the visitor's registration attempts.
+  mailConfig();
   if (
     !(await allowAuthAttempt(`register:${v.email}`, 3)) ||
     !(await allowAuthAttempt("register:global", 100))
   )
     throw new HttpError(429, "Demasiados intentos. Probá más tarde.");
-  mailConfig();
   const passwordHash = await hashPassword(v.password);
   const inserted = await postgres.query<{ id: string }>(
     "INSERT INTO users(id,name,email,password_hash,registration_source) VALUES($1,$2,$3,$4,'PUBLIC') ON CONFLICT(email) DO NOTHING RETURNING id",

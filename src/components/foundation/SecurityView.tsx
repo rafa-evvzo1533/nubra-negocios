@@ -1,5 +1,5 @@
 "use client";
-import {confirmAction} from "../ui/Notifications";
+import { confirmAction, notify } from "../ui/Notifications";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -41,6 +41,7 @@ export function SecurityView({ owner }: { owner: boolean }) {
     setError("");
     try {
       await api("/api/auth/sessions", "DELETE", { target });
+      notify("Sesiones cerradas correctamente.");
       setRevision((v) => v + 1);
       if (target === "all" || sessions.find((s) => s.id === target)?.current) {
         router.replace("/login");
@@ -87,7 +88,11 @@ export function SecurityView({ owner }: { owner: boolean }) {
               disabled={busy}
               className="danger-button"
               onClick={async () => {
-                if (await confirmAction("¿Cerrar todas las sesiones, incluida esta?"))
+                if (
+                  await confirmAction(
+                    "¿Cerrar todas las sesiones, incluida esta?",
+                  )
+                )
                   void revoke("all");
               }}
             >

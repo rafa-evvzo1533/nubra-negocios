@@ -23,4 +23,16 @@ Fecha: 29/09/2026. Ejecutada localmente en Windows con Node 24, PostgreSQL y nav
 
 Los logs locales están en `.local/test-suite-monthly-annual.log`, `.local/start-monthly-annual.log`, `.local/hostinger-start-smoke.log`, `.local/lint-commerce.log` y `.local/typecheck-commerce.log`; no se publican. La corrida comercial anterior también pasó completa antes de incorporar la modalidad anual.
 
-No se verificó todavía un despliegue real en hPanel, PostgreSQL externo o una cuenta real de Mercado Pago. Estos pasos dependen de la configuración del propietario y están detallados en [Hostinger](../deployment/HOSTINGER_HPANEL.md) y [suscripciones](../integrations/SUBSCRIPTIONS.md).
+No se verificó hPanel, PostgreSQL externo o una cuenta real de Mercado Pago. La instalación elegida es una VPS independiente, documentada en [despliegue VPS](../deployment/VPS_DEPLOYED.md). Mercado Pago depende de la configuración del propietario, detallada en [suscripciones](../integrations/SUBSCRIPTIONS.md).
+
+## Actualización: registro, VPS y limpieza (30/09/2026 UTC)
+
+Se repitieron build, lint y la suite completa después de corregir el registro sin
+SMTP, el origen HTTPS detrás de Nginx, los avisos al cerrar diálogos y el formato
+de hora del dashboard. Todo pasó, incluidos ocho tests unitarios (los seis
+anteriores más SMTP indisponible y proxy), OCR real y los mismos totales de la
+tabla. Log: `.local/deploy/test-registration-cleanup.log`.
+
+La VPS compiló correctamente con Node 24 y `npm ci`. La verificación SMTP real
+pasó y el propietario confirmó la recepción del correo de registro. Esto es
+adicional a los fixtures locales de la suite. Ver [registro y limpieza](REGISTRATION_DEPLOYMENT.md).

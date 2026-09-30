@@ -26,4 +26,6 @@ El historial presenta los últimos 200 eventos del negocio con actor, fecha, acc
 
 ## Notificaciones
 
-Avisos dentro de la página, accesibles y descartables; los nuevos guardados y cobros muestran confirmación, y la aprobación de una suscripción actualiza el plan. Las confirmaciones de acciones sensibles utilizan diálogos de la web. Los banners existentes permanecen dentro de sus módulos. No se implementó todavía una bandeja persistente de notificaciones ni push del navegador.
+Avisos flotantes compartidos por productos, clientes, inventario, ventas, presupuestos, caja, equipo, invitaciones, precios y administración. Se muestran al confirmar correctamente una operación, duran diez segundos y se pueden cerrar con la X. Repetir el mismo guardado vuelve a mostrar el aviso; mensajes iguales no se apilan. Permanecen visibles al desplazarse y por encima de formularios abiertos, sin cerrar el formulario ni interrumpir la escritura. Los errores de validación siguen junto a los formularios.
+
+La aprobación de una suscripción también muestra un aviso y actualiza el plan. Las confirmaciones de acciones sensibles utilizan diálogos de la web. No se implementó una bandeja persistente ni push del navegador.

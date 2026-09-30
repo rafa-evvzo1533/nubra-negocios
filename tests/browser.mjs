@@ -85,6 +85,25 @@ try {
     .getByLabel("Qué pasó")
     .fill("Seguimiento registrado desde el navegador.");
   await dialog.getByRole("button", { name: "Registrar actividad" }).click();
+  const activityNotice = page
+    .getByRole("status")
+    .filter({ hasText: "Actividad registrada correctamente." });
+  await expect(activityNotice).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileNotice = await activityNotice.boundingBox();
+  assert(
+    mobileNotice &&
+      mobileNotice.x >= 0 &&
+      mobileNotice.x + mobileNotice.width <= 390,
+    "Modal notification fits mobile viewport",
+  );
+  // Must be clickable above the native modal backdrop, without closing the record.
+  await activityNotice
+    .getByRole("button", { name: "Cerrar notificación" })
+    .click();
+  await expect(activityNotice).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 1040 });
   await expect(
     dialog.getByText("Seguimiento registrado desde el navegador."),
   ).toBeVisible();
@@ -105,6 +124,26 @@ try {
     await dialog.getByLabel("Precio (ARS)", { exact: true }).fill(price);
     await dialog.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page.getByText(name, { exact: true })).toBeVisible();
+    const savedNotice = page
+      .getByRole("status")
+      .filter({ hasText: "Cambios guardados correctamente." });
+    await expect(savedNotice).toBeVisible();
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+    const position = await savedNotice.boundingBox();
+    assert(
+      position && position.y >= 0 && position.y < 80,
+      "Notification stays at the top of the viewport after scrolling",
+    );
+    if (sku === "BROWSER-1") {
+      await mkdir(".local/qa", { recursive: true });
+      await page.screenshot({ path: ".local/qa/product-notification.png" });
+      await savedNotice
+        .getByRole("button", { name: "Cerrar notificación" })
+        .click();
+      await expect(savedNotice).toHaveCount(0);
+    } else {
+      await expect(savedNotice).toHaveCount(0, { timeout: 12000 });
+    }
   }
   const products = await (
     await context.request.get(base + "/api/v1/products")
@@ -169,6 +208,11 @@ try {
     dialog.getByText("Venta creada. El stock fue actualizado."),
   ).toBeVisible();
   await expect(dialog.getByText("Convertido", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Venta creada. El stock fue actualizado." }),
+  ).toHaveCount(1);
   await page.keyboard.press("Escape");
   await page.keyboard.press("Control+k");
   dialog = page.getByRole("dialog");

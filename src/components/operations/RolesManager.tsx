@@ -1,5 +1,5 @@
 "use client";
-import {confirmAction} from "../ui/Notifications";
+import { confirmAction, notify } from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import { ShieldCheck, Plus, Pencil, Trash2 } from "lucide-react";
 import { api } from "../foundation/AccountForms";
@@ -14,10 +14,10 @@ export type CustomRole = {
 };
 const names: Record<string, string> = {
   customers: "Clientes",
-  suppliers:"Proveedores",
-  accounts:"Cuenta corriente",
-  reports:"Reportes (requiere lectura financiera)",
-  audit:"Historial de actividad",
+  suppliers: "Proveedores",
+  accounts: "Cuenta corriente",
+  reports: "Reportes (requiere lectura financiera)",
+  audit: "Historial de actividad",
   products: "Productos",
   sales: "Ventas",
   inventory: "Inventario",
@@ -73,6 +73,7 @@ export function RolesManager({ onChanged }: { onChanged: () => void }) {
       setEditing(undefined);
       setRevision((r) => r + 1);
       onChanged();
+      notify("Rol guardado correctamente.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     } finally {
@@ -141,10 +142,14 @@ export function RolesManager({ onChanged }: { onChanged: () => void }) {
                   className="secondary-button"
                   disabled={busy}
                   onClick={async () => {
-                    if (!await confirmAction(`¿Eliminar el rol ${role.name}?`)) return;
+                    if (
+                      !(await confirmAction(`¿Eliminar el rol ${role.name}?`))
+                    )
+                      return;
                     setBusy(true);
                     try {
                       await api("/api/v1/roles/" + role.id, "DELETE");
+                      notify("Rol eliminado correctamente.");
                       setRevision((r) => r + 1);
                       onChanged();
                     } catch (e) {

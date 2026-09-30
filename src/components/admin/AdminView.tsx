@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { displayLabel } from "@/domain/display";
 import { useEffect, useState, type FormEvent } from "react";
 import {
@@ -47,7 +48,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [create, setCreate] = useState(false);
   const [tab, setTab] = useState("data");
-  const [message, setMessage] = useState("");
+
   useEffect(() => {
     let active = true;
     fetch("/api/admin/organizations", { cache: "no-store" })
@@ -144,11 +145,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
           {error}
         </p>
       )}
-      {message && (
-        <p className="notice-success" role="status">
-          {message}
-        </p>
-      )}
+
       {!authenticated ? (
         <section className={styles.section}>
           <form className={styles.authCard} onSubmit={login}>
@@ -178,8 +175,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
             className="secondary-button"
             onClick={() => {
               setSelected(null);
-              setMessage("");
-            }}
+                      }}
           >
             <ArrowLeft size={16} /> Todas las empresas
           </button>
@@ -222,7 +218,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
                 organization={current}
                 onSaved={async () => {
                   await reload();
-                  setMessage("Datos de la empresa actualizados.");
+                  notify("Datos de la empresa actualizados.");
                 }}
               />
             ) : tab === "team" ? (
@@ -288,8 +284,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
                         onClick={() => {
                           setSelected(o.id);
                           setTab("data");
-                          setMessage("");
-                        }}
+                                              }}
                       >
                         Gestionar
                       </button>
@@ -339,7 +334,7 @@ export function AdminView({ onBack }: { onBack: () => void }) {
               await reload();
               setSelected(id ?? null);
               setTab("data");
-              setMessage(
+              notify(
                 "Empresa creada. Entregá las credenciales al propietario por un canal autorizado.",
               );
             }}
@@ -526,7 +521,8 @@ function AuditView({ organizationId }: { organizationId: string }) {
           key={log.id}
           style={{ padding: 12, borderBottom: "1px solid var(--line)" }}
         >
-          {displayLabel(log.action)} · {new Date(log.created_at).toLocaleString("es-AR")}
+          {displayLabel(log.action)} ·{" "}
+          {new Date(log.created_at).toLocaleString("es-AR")}
         </p>
       ))}
       {logs?.length === 0 && <p>Sin actividad registrada.</p>}

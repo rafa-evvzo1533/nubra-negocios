@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../ui/Notifications";
 import { useEffect, useState } from "react";
 import { Invitations } from "./Invitations";
 import styles from "../business/BusinessModule.module.css";
@@ -47,7 +48,7 @@ export function TeamView({
     : "/api/v1/members";
   const [members, setMembers] = useState<Member[]>([]);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+
   const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState(false);
 
@@ -82,7 +83,6 @@ export function TeamView({
   async function mutate(id: string, role: string | null) {
     setBusy(true);
     setError("");
-    setMessage("");
     try {
       await request(
         `${base}/${id}`,
@@ -95,7 +95,7 @@ export function TeamView({
       );
       setRevision((v) => v + 1);
       onChanged?.();
-      setMessage(
+      notify(
         "Membresía actualizada. Las sesiones de ese usuario en esta empresa se cerraron.",
       );
     } catch (e) {
@@ -121,11 +121,7 @@ export function TeamView({
           {error}
         </p>
       )}
-      {message && (
-        <p className="notice-success" role="status">
-          {message}
-        </p>
-      )}
+
       <div className={`${styles.listPanel} ${styles.table}`}>
         <table>
           <thead>

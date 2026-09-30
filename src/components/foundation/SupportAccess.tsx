@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "./AccountForms";
 import { Dialog } from "../ui/Dialog";
+import { notify } from "../ui/Notifications";
 import s from "./Foundation.module.css";
 type Request = {
   id: string;
@@ -53,6 +54,7 @@ export function SupportAccess({
     try {
       await api(path, "POST", body);
       setRevision((r) => r + 1);
+      notify("Solicitud de soporte actualizada correctamente.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
     } finally {

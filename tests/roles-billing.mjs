@@ -417,6 +417,11 @@ try {
     viewport: { width: 1440, height: 1000 },
   });
   const page = await context.newPage();
+  const browserErrors = [];
+  page.on("pageerror", (error) => {
+    browserErrors.push(new URL(page.url()).pathname + ": " + error.message);
+    console.error("Roles browser error:", new URL(page.url()).pathname, error.message);
+  });
   const failed = [];
   page.on("response", (r) => {
     if (r.status() >= 400 && /\.(css|js)(\?|$)/.test(r.url()))
@@ -457,6 +462,10 @@ try {
   await expect(
     page.getByRole("heading", { name: "Depósito", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Rol guardado correctamente." }),
+  ).toBeVisible();
+  assert.deepEqual(browserErrors, [], "Saving a role must not break the page");
   checks++;
   await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: ".next/test-team.png", fullPage: true });

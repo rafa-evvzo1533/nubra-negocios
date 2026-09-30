@@ -1,5 +1,6 @@
 "use client";
-import {confirmAction} from "../ui/Notifications";
+import { notify } from "../ui/Notifications";
+import { confirmAction } from "../ui/Notifications";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
@@ -44,7 +45,7 @@ export function RecordDetail({
   const [activities, setActivities] = useState<Activity[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [success, setSuccess] = useState("");
+
   const [fileLink, setFileLink] = useState("");
   async function prepareFile() {
     setBusy(true);
@@ -80,12 +81,11 @@ export function RecordDetail({
   async function change(action: string, body: unknown) {
     setBusy(true);
     setError("");
-    setSuccess("");
     try {
       await send(`${resource}/${row.id}/${action}`, body);
       setDetail(await api<Row>(`${resource}/${row.id}`));
       onChanged();
-      setSuccess(
+      notify(
         action === "convert"
           ? "Venta creada. El stock fue actualizado."
           : "Estado actualizado.",
@@ -110,6 +110,7 @@ export function RecordDetail({
       form.reset();
       setActivities(await api<Activity[]>(`customers/${row.id}/activities`));
       onChanged();
+      notify("Actividad registrada correctamente.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error de conexión");
     } finally {
@@ -133,12 +134,7 @@ export function RecordDetail({
             {error}
           </p>
         )}
-        {success && (
-          <p className="notice-success" role="status">
-            <Check size={16} />
-            {success}
-          </p>
-        )}
+
         {resource === "sales" &&
           writable &&
           detail &&

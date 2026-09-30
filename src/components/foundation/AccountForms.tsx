@@ -13,7 +13,7 @@ export async function api(path: string, method = "GET", body?: unknown) {
   if (!r.ok) throw new Error(data.error ?? "No se pudo completar la operación");
   return data;
 }
-export function RegisterForm() {
+export function RegisterForm({ available = true }: { available?: boolean }) {
   const [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -38,7 +38,18 @@ export function RegisterForm() {
       <p>
         Creá tu cuenta, verificá tu email y presentá tu negocio para revisión.
       </p>
-      {message ? (
+      {!available ? (
+        <>
+          <p role="status" className="notice-error">
+            El registro está temporalmente pausado porque no podemos enviar el
+            correo de verificación. Volvé a intentarlo más tarde.
+          </p>
+          <p>
+            Si ya tenés una cuenta, podés{" "}
+            <Link href="/login">iniciar sesión</Link>.
+          </p>
+        </>
+      ) : message ? (
         <>
           <p role="status" className="notice-success">
             {message}

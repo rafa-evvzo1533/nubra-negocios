@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Nubra Negocios database backup
+
+[Timer]
+OnCalendar=*-*-* 06:15:00 UTC
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

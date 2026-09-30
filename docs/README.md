@@ -20,6 +20,9 @@ El [estado del proyecto](project-status.md) describe la entrega vigente. Los doc
 - [Funciones que se pueden agregar](product/FEATURE_IDEAS.md).
 - [API de los nuevos módulos](integrations/COMMERCE_API.md).
 - [Despliegue en Hostinger Cloud con hPanel](deployment/HOSTINGER_HPANEL.md).
+- [Despliegue en VPS, con PostgreSQL local y HTTPS](deployment/HOSTINGER_VPS.md).
+- [VPS publicada: dirección, verificaciones y operación](deployment/VPS_DEPLOYED.md).
+- [Configuración de correo para registro y recuperación](deployment/SMTP.md).
 - [Precios sugeridos para negocios chicos](product/PRICING_PROPOSAL.md), sin activar importes.
 
 `README.md` mantiene el inicio rápido. `AGENTS.md` y `CLAUDE.md` permanecen en la raíz porque son instrucciones consumidas por herramientas del proyecto. Credenciales, logs y capturas locales quedan fuera de Git en `.local/`.

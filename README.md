@@ -36,6 +36,10 @@ Nubra Base no se ofrece públicamente ni como parte de los planes. Mercado Pago 
 
 Para Cloud Hosting administrado de Hostinger, usar la [guía de hPanel](docs/deployment/HOSTINGER_HPANEL.md), `npm run build:hostinger` y `npm run start:hostinger`. PostgreSQL es externo; el runtime no recibe credenciales de migración. La plantilla está en `deploy/hostinger/runtime.env.example`.
 
+Para una **VPS**, usar la [guía de VPS](docs/deployment/HOSTINGER_VPS.md) y las
+plantillas de `deploy/vps/`: Node.js 24, PostgreSQL local, servicio systemd y HTTPS.
+El dominio se conecta a la IP de la VPS; no hace falta un plan Cloud.
+
 ## Verificación
 
 npm run lint
