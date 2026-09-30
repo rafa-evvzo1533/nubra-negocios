@@ -1,8 +1,11 @@
 # Despliegue verificado: 29 de septiembre de 2026 (Argentina)
 
-URL pública: https://srv1956999.hstgr.cloud
+URL pública: https://negocios.nubradigital.net
 
-Administración: https://srv1956999.hstgr.cloud/admin
+Administración: https://negocios.nubradigital.net/admin
+
+Dominio propio activado el 30/09/2026 UTC. El hostname anterior
+`srv1956999.hstgr.cloud` redirige con HTTP 308, conservando ruta y parámetros.
 
 ## Instalación
 
@@ -22,8 +25,10 @@ Administración: https://srv1956999.hstgr.cloud/admin
   `nubra_runtime`. Secretos de ejecución y aprovisionamiento separados en
   `/etc/nubra-negocios/`, archivos root:root 0600.
 - Nginx: sitio independiente `/etc/nginx/sites-available/nubra-negocios`.
-  Certificado Let's Encrypt para el hostname asignado por Hostinger; HTTPS
-  público, redirección HTTP y renovación programada con recarga de Nginx.
+  El sitio `/etc/nginx/sites-available/nubra-negocios-domain` atiende el dominio
+  propio; el anterior conserva la redirección y la renovación de su certificado.
+  Certificados Let's Encrypt, HTTPS público, redirección HTTP y renovación
+  programada con recarga de Nginx.
 - Administrador `nubra-admin`. La contraseña generada está en el archivo privado
   local `.local/vps-admin-access.txt`; no se versiona ni se muestra en logs.
 
@@ -67,3 +72,21 @@ deshabilitado hasta configurar sus propias credenciales.
 Para agregar un dominio propio, apuntarlo a la IP, incorporar el sitio/certificado
 correspondiente y actualizar `APP_URL` al origen HTTPS elegido antes de reiniciar.
 No requiere cambiar a Cloud Hosting. Ver [la guía VPS](HOSTINGER_VPS.md).
+
+## Dominio propio y acceso administrativo
+
+- Registro DNS: `A negocios → 179.199.145.15`, TTL 300. El propietario lo agregó
+  desde la cuenta que administra `nubradigital.net`; la conexión API disponible
+  no tiene acceso a ese dominio.
+- `APP_URL=https://negocios.nubradigital.net` en el entorno privado de producción;
+  los enlaces de correo y las verificaciones de origen usan este dominio.
+- Certificado emitido para `negocios.nubradigital.net` y renovación automática
+  configurada. El sitio conserva HTTPS en el hostname anterior para redirigir
+  enlaces de verificación que ya fueron enviados.
+- El administrador interno usa `nubra-admin` y la contraseña del archivo privado
+  `.local/vps-admin-access.txt`. Es independiente de las cuentas de clientes
+  creadas en `/register`; no fue necesario restablecer la contraseña.
+- Verificado en el nuevo dominio: salud HTTPS, formulario de registro habilitado,
+  login real de administrador en Edge, consola interna, cookie Secure/HttpOnly,
+  cierre de sesión, vista móvil y rechazo de orígenes falsos. Sin errores de
+  navegador ni respuestas 5xx durante el recorrido.
