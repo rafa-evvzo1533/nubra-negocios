@@ -2,6 +2,9 @@
 
 Los planes son Free, Lite, Business y Enterprise. Sus capacidades y límites salen de PostgreSQL. Free se asigna al aprobar una solicitud. Los precios comienzan vacíos: el sistema no inventa importes ni permite pagar sin configuración.
 
+La VPS tiene cargados los [precios aprobados](../product/PRICING_PROPOSAL.md)
+por el propietario. Configurar precios y habilitar Mercado Pago son pasos independientes.
+
 ## Pantallas
 
 - `/register-business`: entrada visible al registro y estado de la solicitud.

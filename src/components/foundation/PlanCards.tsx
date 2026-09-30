@@ -79,6 +79,10 @@ export function PlanCards({
       </div>
       <div className={s.plans}>
         {plans.map((original) => {
+          const annualSavings =
+            original.price_cents != null && original.annual_price_cents != null
+              ? original.price_cents * 12 - original.annual_price_cents
+              : 0;
           const plan =
             period === "YEARLY"
               ? {
@@ -112,6 +116,12 @@ export function PlanCards({
                   </small>
                 )}
               </div>
+              {period === "YEARLY" && plan.code !== "FREE" && annualSavings > 0 && (
+                <p className={s.annualSavings}>
+                  Ahorrás {formatPrice(annualSavings, plan.currency)} al año
+                  <span>Comparado con 12 pagos mensuales.</span>
+                </p>
+              )}
               <p className={s.period}>
                 {plan.code === "FREE"
                   ? "Sin vencimiento. Límites de uso."

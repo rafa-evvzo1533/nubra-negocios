@@ -14,8 +14,9 @@ Dominio propio activado el 30/09/2026 UTC. El hostname anterior
   Se conserva el Node.js global que usan los otros proyectos.
 - Versión inicial: `/opt/nubra-negocios/releases/20260930-https`, mediante el
   enlace `/opt/nubra-negocios/current`.
-- Versión vigente: `/opt/nubra-negocios/releases/20260930-registration`, con
-  registro SMTP, correcciones de avisos y limpieza de módulos sin uso.
+- Versión vigente: `/opt/nubra-negocios/releases/20260930-prices`, con
+  registro SMTP, correcciones de avisos, limpieza de módulos sin uso y ahorro anual
+  visible en los planes. Precios mensuales/anuales guardados en PostgreSQL.
 - Servicio systemd `nubra-negocios`, usuario sin privilegios `nubra-negocios`,
   escucha exclusivamente en `127.0.0.1:3200` y reinicia ante fallos.
 - PostgreSQL 16 en el proyecto Docker Compose `nubra-negocios`, volumen propio,
