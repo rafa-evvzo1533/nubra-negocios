@@ -133,7 +133,7 @@ export function SubscriptionView({ data }: { data: Data }) {
         setOrders(history);
         const order = history.find((o) => o.id === orderId);
         if (order?.status === "PAID") {
-          setMessage("Pago aprobado. Tu plan ya está activo.");
+          setMessage("");
           notify("Pago aprobado. Tu plan ya está activo.");
           router.refresh();
           return;
@@ -178,13 +178,12 @@ export function SubscriptionView({ data }: { data: Data }) {
       active = false;
     };
   }, [data.canManage, revision]);
-  async function confirm(inquiry = false) {
+  async function confirm() {
     if (!selected) return;
     setBusy(true);
     setError("");
     try {
       if (
-        !inquiry &&
         data.billingReady &&
         selected.checkout_enabled &&
         selected.price_cents
@@ -213,12 +212,9 @@ export function SubscriptionView({ data }: { data: Data }) {
         );
         window.location.assign(result.url);
       } else {
-        const result = await api("/api/v1/subscription", "POST", {
-          plan: selected.code,
-        });
-        setMessage(result.message);
-        notify(result.message);
-        setSelected(null);
+        setError(
+          "El pago online todavía no está disponible. Volvé a intentarlo más tarde.",
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo iniciar el pago");
@@ -244,7 +240,7 @@ export function SubscriptionView({ data }: { data: Data }) {
               action,
             });
       notify(result.message);
-      setMessage(result.message);
+      setMessage("");
       setTrialDialog(false);
       setCancelDialog(false);
       router.refresh();
@@ -402,7 +398,6 @@ export function SubscriptionView({ data }: { data: Data }) {
             setSelected(p);
           }}
           busy={busy}
-          canPay={data.billingReady}
           canManage={data.canManage}
           trialAvailable={data.trialAvailable}
           onTrial={() => {
@@ -414,7 +409,7 @@ export function SubscriptionView({ data }: { data: Data }) {
           <CreditCard size={18} />
           {data.billingReady
             ? "Pagá de forma segura en Mercado Pago. La acreditación se confirma automáticamente y puede demorar unos minutos."
-            : "Los pagos online se habilitarán cuando NUBRA configure los precios y Mercado Pago. Podés enviar una consulta sobre el plan."}{" "}
+            : "El pago online estará disponible próximamente. Podés ver los precios y elegir tu plan."}{" "}
           {!data.canManage &&
             "Solo los responsables del negocio pueden contratar."}
         </p>
@@ -515,17 +510,23 @@ export function SubscriptionView({ data }: { data: Data }) {
         )}
         {selected && (
           <Dialog
-            title={payable ? "Confirmá tu contratación" : "Consultar un plan"}
+            title="Comprar plan"
             onClose={() => setSelected(null)}
             busy={busy}
           >
             <div className={s.form}>
               <h3>{selected.name}</h3>
               <p className={s.muted}>
-                {payable
-                  ? `${formatPrice(selected.price_cents!, selected.currency)} ${period === "YEARLY" ? "por el año completo, en un pago único." : "por mes, con renovación y cobro automático hasta que canceles desde esta pantalla. El primer cobro se realiza al autorizar la suscripción."} Vas a continuar en Mercado Pago.`
-                  : "Enviaremos una solicitud al equipo de NUBRA. Esta consulta no genera ningún cobro ni cambia tu plan actual."}
+                {selected.price_cents
+                  ? `${formatPrice(selected.price_cents!, selected.currency)} ${period === "YEARLY" ? "por el año completo, en un pago único." : "por mes, con renovación y cobro automático hasta que canceles desde esta pantalla. El primer cobro se realiza al autorizar la suscripción."}${payable ? " Vas a continuar en Mercado Pago." : ""}`
+                  : "El precio de este período todavía no está disponible."}
               </p>
+              {!payable && (
+                <p className={s.trialOffer} role="status">
+                  El pago online todavía no está disponible. Volvé a intentarlo
+                  más tarde. Tu plan actual no cambia.
+                </p>
+              )}
               {payable && period === "MONTHLY" && (
                 <label className={s.check}>
                   <input
@@ -547,25 +548,13 @@ export function SubscriptionView({ data }: { data: Data }) {
                   className="primary-button"
                   disabled={
                     busy ||
+                    !payable ||
                     Boolean(payable && period === "MONTHLY" && !renewalConsent)
                   }
                   onClick={() => confirm()}
                 >
-                  {busy
-                    ? "Procesando…"
-                    : payable
-                      ? "Ir a Mercado Pago"
-                      : "Enviar consulta"}
+                  {busy ? "Procesando…" : "Pagar con Mercado Pago"}
                 </button>
-                {payable && (
-                  <button
-                    className="secondary-button"
-                    disabled={busy}
-                    onClick={() => confirm(true)}
-                  >
-                    Solicitar propuesta sin pagar
-                  </button>
-                )}
                 <button
                   className="secondary-button"
                   disabled={busy}

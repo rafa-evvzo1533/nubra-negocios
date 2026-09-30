@@ -331,7 +331,69 @@ try {
   await context.addCookies([
     { name: "nubra_user_session", value: c.cookie.split("=")[1], url: base },
   ]);
+  await call("/api/internal/admin/prices", {
+    method: "PATCH",
+    cookie: admin,
+    body: {
+      plan: "BUSINESS",
+      period: "MONTHLY",
+      priceCents: 1000000,
+      currency: "ARS",
+      enabled: false,
+    },
+  });
   await page.goto(base + "/settings/subscription");
+  const businessCard = page
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", { name: "Business", exact: true }),
+    });
+  await businessCard
+    .getByRole("button", { name: "Comprar plan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Comprar plan" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Pagar con Mercado Pago", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText(/El pago online todavía no está disponible/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Consultar|Solicitar propuesta/ }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Cancelar", exact: true })
+    .click();
+  await call("/api/internal/admin/prices", {
+    method: "PATCH",
+    cookie: admin,
+    body: {
+      plan: "BUSINESS",
+      period: "MONTHLY",
+      priceCents: 1000000,
+      currency: "ARS",
+      enabled: true,
+    },
+  });
+  await page.reload();
+  await businessCard
+    .getByRole("button", { name: "Comprar plan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Pagar con Mercado Pago", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("checkbox", { name: /Acepto la renovación/ }).check();
+  await expect(
+    page.getByRole("button", { name: "Pagar con Mercado Pago", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Cancelar", exact: true })
+    .click();
+  checks += 6;
   await page
     .getByRole("button", { name: "Reclamar prueba gratis", exact: true })
     .click();
@@ -345,6 +407,17 @@ try {
     page.getByRole("button", { name: "Reclamar prueba gratis", exact: true }),
   ).toHaveCount(0);
   checks += 2;
+  const toast = page.locator(".notification-card");
+  await expect(toast).toHaveCount(1);
+  const noticeText = await toast
+    .locator(".notification-content span")
+    .innerText();
+  await expect(page.getByText(noticeText, { exact: true })).toHaveCount(1);
+  const bounds = await toast.boundingBox();
+  assert(bounds.x > page.viewportSize().width / 2 && bounds.y < 50);
+  await toast.getByRole("button").click();
+  await expect(toast).toHaveCount(0);
+  checks += 4;
   const second = (
     await call("/api/v1/billing/recurring", {
       method: "POST",
@@ -411,6 +484,116 @@ try {
   await page.goto(base + "/forgot-password");
   await expect(page.getByRole("img", { name: "Nubra Negocios" })).toBeVisible();
   checks++;
+  const icon = await page
+    .locator('link[rel="icon"][href*="icon.png"]')
+    .getAttribute("href");
+  const iconResponse = await fetch(new URL(icon, base));
+  assert.equal(iconResponse.status, 200);
+  assert.match(iconResponse.headers.get("content-type"), /image\/png/);
+  checks += 2;
+
+  // Manual grants use an isolated organization; never change a real subscription.
+  const grantOrg = (
+    await call("/api/admin/organizations", {
+      method: "POST",
+      cookie: admin,
+      status: 201,
+      body: {
+        name: "Vigencia manual",
+        ownerName: "Responsable",
+        ownerEmail: `duration-${randomUUID()}@example.invalid`,
+        ownerPassword: password,
+      },
+    })
+  ).data.organization.id;
+  const grantPath = `/api/internal/admin/organizations/${grantOrg}`;
+  const grant = async (options, status = 200, cookie = admin) =>
+    call(grantPath, {
+      method: "POST",
+      cookie,
+      status,
+      body: {
+        action: "plan",
+        subscription: {
+          plan: "LITE",
+          source: "MANUAL_GRANT",
+          reason: "Prueba de vigencia",
+          ...options,
+        },
+      },
+    });
+  const expiry = async () =>
+    (
+      await db.query(
+        "SELECT expires_at FROM subscriptions WHERE organization_id=$1",
+        [grantOrg],
+      )
+    ).rows[0].expires_at;
+  for (const [duration, minDays, maxDays] of [
+    ["DAYS_14", 14, 14],
+    ["MONTHLY", 28, 31],
+    ["QUARTERLY", 89, 92],
+    ["YEARLY", 365, 366],
+  ]) {
+    const start = Date.now();
+    await grant({ duration });
+    const end = (await expiry()).getTime();
+    assert(
+      end >= start + minDays * 86400000 &&
+        end <= Date.now() + maxDays * 86400000,
+    );
+    checks++;
+  }
+  const chosen = new Date(Date.now() + 70 * 86400000).toISOString();
+  await grant({ duration: "CUSTOM", expiresAt: chosen });
+  await grant({ duration: "KEEP" });
+  assert.equal((await expiry()).toISOString(), chosen);
+  await grant({ duration: "CUSTOM" }, 400);
+  await grant({ duration: "CUSTOM", expiresAt: "2020-01-01T00:00:00Z" }, 400);
+  await grant({ duration: "MONTHLY", expiresAt: chosen }, 400);
+  await grant({ duration: "UNKNOWN" }, 400);
+  await grant({ duration: "UNLIMITED" }, 401, c.cookie);
+  assert.equal((await expiry()).toISOString(), chosen);
+  await grant({ duration: "UNLIMITED" });
+  assert.equal(await expiry(), null);
+  checks += 3;
+  await context.addCookies([
+    { name: admin.split("=")[0], value: admin.split("=")[1], url: base },
+  ]);
+  await page.setViewportSize({ width: 1440, height: 950 });
+  await page.goto(base + "/internal");
+  await page
+    .getByRole("button", { name: "Empresas y suscripciones", exact: true })
+    .click();
+  const card = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "Vigencia manual", exact: true }),
+  });
+  await card.getByLabel("Duración de la suscripción").selectOption("CUSTOM");
+  await card.getByLabel("Fecha y hora de vencimiento").fill("2030-06-15T18:30");
+  await card
+    .getByLabel("Motivo / referencia comercial")
+    .fill("Vigencia desde el panel");
+  const expectedExpiry = await card
+    .getByLabel("Fecha y hora de vencimiento")
+    .evaluate((el) => new Date(el.value).toISOString());
+  await card
+    .getByRole("button", { name: "Guardar suscripción", exact: true })
+    .click();
+  await expect(
+    page.getByText("Cambio guardado y registrado en auditoría.", {
+      exact: true,
+    }),
+  ).toHaveCount(1);
+  await expect(card.getByText(/^Vence el /)).toBeVisible();
+  assert.equal((await expiry()).toISOString(), expectedExpiry);
+  const audit = (
+    await db.query(
+      "SELECT metadata FROM platform_audit_logs WHERE organization_id=$1 AND action='subscription.changed' ORDER BY created_at DESC LIMIT 1",
+      [grantOrg],
+    )
+  ).rows[0];
+  assert.equal(audit.metadata.expiresAt, expectedExpiry);
+  checks += 4;
   assert.deepEqual(errors, []);
   checks++;
   console.log(

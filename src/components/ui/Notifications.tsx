@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, X, TriangleAlert } from "lucide-react";
+import { Check, X, TriangleAlert, Info } from "lucide-react";
 import { Dialog } from "./Dialog";
 type Notice = {
   id: string;
@@ -129,14 +129,25 @@ function NoticeList({
         <div
           key={n.id}
           role={n.kind === "error" ? "alert" : "status"}
-          className={n.kind === "error" ? "notice-error" : "notice-success"}
+          className={`notification-card notification-${n.kind}`}
         >
           {n.kind === "error" ? (
             <TriangleAlert size={17} />
+          ) : n.kind === "info" ? (
+            <Info size={20} />
           ) : (
             <Check size={17} />
           )}
-          <span>{n.message}</span>
+          <div className="notification-content">
+            <strong>
+              {n.kind === "error"
+                ? "No se pudo completar"
+                : n.kind === "info"
+                  ? "Información"
+                  : "Listo"}
+            </strong>
+            <span>{n.message}</span>
+          </div>
           <button
             className="icon-button"
             aria-label="Cerrar notificación"

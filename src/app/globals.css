@@ -402,9 +402,9 @@ tbody tr:hover {
 
 .notifications {
   position: fixed;
-  inset: 18px auto auto 50%;
-  transform: translateX(-50%);
-  width: min(760px, calc(100vw - 32px));
+  inset: max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right)) auto auto;
+  width: min(420px, calc(100vw - 40px));
   max-height: calc(100dvh - 36px);
   overflow: auto;
   z-index: 1000;
@@ -415,23 +415,80 @@ tbody tr:hover {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--ink);
+  color: #f8fafc;
 }
 .notifications:not(:popover-open) {
   display: none;
 }
 .notifications > div {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin: 0;
-  box-shadow: var(--shadow-panel);
+  padding: 18px;
+  border: 1px solid #46556b;
+  border-left: 4px solid #34d399;
+  border-radius: 14px;
+  background: #152236;
+  box-shadow: 0 12px 42px #0009;
+  animation: notification-enter 0.22s ease-out;
   pointer-events: auto;
 }
-.notifications > div > span {
+.notification-content {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.notification-content strong {
+  display: block;
+  color: #fff;
+  font-size: 14px;
+  margin: 0 0 5px;
+}
+.notification-content span {
+  display: block;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.notifications > .notification-error {
+  border-left-color: #fb7185;
+}
+.notifications > .notification-info {
+  border-left-color: #60a5fa;
+}
+.notifications > div > svg {
+  margin-top: 2px;
+  color: #6ee7b7;
+}
+.notifications > .notification-error > svg {
+  color: #fda4af;
+}
+.notifications > .notification-info > svg {
+  color: #93c5fd;
+}
+.notifications .icon-button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  color: #f8fafc;
+  border-color: #64748b;
+  background: #1e293b;
+}
+@keyframes notification-enter {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notifications > div {
+    animation: none;
+  }
 }
 .notifications > div > svg,
 .notifications > div > button {

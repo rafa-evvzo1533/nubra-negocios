@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { periodEnd } from "../src/domain/billing-period.ts";
+test("quarterly grants clamp month-end while preserving UTC time", () => {
+  assert.equal(
+    periodEnd(new Date("2027-01-31T12:34:56Z"), "QUARTERLY").toISOString(),
+    "2027-04-30T12:34:56.000Z",
+  );
+});
 test("monthly subscriptions clamp month-end without losing the UTC time", () => {
   assert.equal(
     periodEnd(new Date("2027-01-31T12:34:56Z"), "MONTHLY").toISOString(),

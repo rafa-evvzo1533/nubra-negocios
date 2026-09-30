@@ -5,7 +5,9 @@ URL pública: https://negocios.nubradigital.net
 Administración: https://negocios.nubradigital.net/admin
 
 Dominio propio activado el 30/09/2026 UTC. El hostname anterior
-`srv1956999.hstgr.cloud` redirige con HTTP 308, conservando ruta y parámetros.
+`srv1956999.hstgr.cloud` devuelve HTTP 404 en HTTP y HTTPS desde el 30/09/2026,
+por pedido del propietario. No muestra la aplicación ni redirige al dominio propio.
+Se conserva únicamente la ruta ACME para renovar su certificado.
 
 ## Instalación
 
@@ -14,10 +16,12 @@ Dominio propio activado el 30/09/2026 UTC. El hostname anterior
   Se conserva el Node.js global que usan los otros proyectos.
 - Versión inicial: `/opt/nubra-negocios/releases/20260930-https`, mediante el
   enlace `/opt/nubra-negocios/current`.
-- Versión vigente: `/opt/nubra-negocios/releases/20260930-trials`, con
+- Versión vigente: `/opt/nubra-negocios/releases/20260930-ui`, con
   portada interactiva y animaciones accesibles, logo oficial en recuperación,
   prueba de Business y renovación mensual implementada. Precios mensuales/anuales
   guardados en PostgreSQL; Mercado Pago pendiente de credenciales del propietario.
+  Incluye favicon oficial, compra sin solicitud comercial, avisos únicos a la
+  derecha y duración configurable de las asignaciones desde el panel interno.
 - Servicio systemd `nubra-negocios`, usuario sin privilegios `nubra-negocios`,
   escucha exclusivamente en `127.0.0.1:3200` y reinicia ante fallos.
 - PostgreSQL 16 en el proyecto Docker Compose `nubra-negocios`, volumen propio,

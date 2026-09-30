@@ -8,6 +8,7 @@ import { requireAdmin } from "./admin";
 import { HttpError } from "./http";
 import type { SessionContext } from "./tenant";
 import { billingReady } from "./mercado-pago";
+import { periodEnd } from "@/domain/billing-period";
 
 export const planCode = z.enum(["FREE", "LITE", "BUSINESS", "ENTERPRISE"]);
 export const subscriptionSource = z.enum([
@@ -210,7 +211,7 @@ export async function setSubscription(
       randomUUID(),
       staffId,
       organizationId,
-      JSON.stringify({ plan, source, reason }),
+      JSON.stringify({ plan, source, reason, expiresAt }),
     ],
   );
   await db.query(
@@ -227,6 +228,17 @@ export async function changeOrganizationPlan(id: string, body: unknown) {
       source: subscriptionSource,
       reason: z.string().trim().min(3).max(1000),
       expiresAt: z.iso.datetime().nullable().default(null),
+      duration: z
+        .enum([
+          "KEEP",
+          "DAYS_14",
+          "MONTHLY",
+          "QUARTERLY",
+          "YEARLY",
+          "CUSTOM",
+          "UNLIMITED",
+        ])
+        .optional(),
     })
     .strict()
     .parse(body);
@@ -237,6 +249,10 @@ export async function changeOrganizationPlan(id: string, body: unknown) {
     throw new HttpError(400, "El plan no corresponde al paquete");
   if (v.expiresAt && new Date(v.expiresAt) <= new Date())
     throw new HttpError(400, "La fecha debe ser futura");
+  if (v.duration === "CUSTOM" && !v.expiresAt)
+    throw new HttpError(400, "Elegí la fecha de vencimiento");
+  if (v.duration && v.duration !== "CUSTOM" && v.expiresAt)
+    throw new HttpError(400, "Elegí una duración o una fecha personalizada");
   return transaction(async (db) => {
     if (
       !(
@@ -246,6 +262,27 @@ export async function changeOrganizationPlan(id: string, body: unknown) {
       ).rows.length
     )
       throw new HttpError(404, "Empresa no encontrada");
+    let expiresAt = v.expiresAt;
+    const now = new Date();
+    if (v.duration === "KEEP") {
+      const current = (
+        await db.query<{ expires_at: Date | null }>(
+          "SELECT expires_at FROM subscriptions WHERE organization_id=$1",
+          [id],
+        )
+      ).rows[0];
+      expiresAt = current?.expires_at?.toISOString() ?? null;
+    } else if (v.duration === "UNLIMITED") expiresAt = null;
+    else if (v.duration === "DAYS_14")
+      expiresAt = new Date(now.getTime() + 14 * 86400000).toISOString();
+    else if (
+      v.duration &&
+      ["MONTHLY", "QUARTERLY", "YEARLY"].includes(v.duration)
+    )
+      expiresAt = periodEnd(
+        now,
+        v.duration as "MONTHLY" | "QUARTERLY" | "YEARLY",
+      ).toISOString();
     await setSubscription(
       db,
       id,
@@ -253,7 +290,7 @@ export async function changeOrganizationPlan(id: string, body: unknown) {
       v.source,
       actor.id,
       v.reason,
-      v.expiresAt,
+      expiresAt,
     );
     return { id };
   });

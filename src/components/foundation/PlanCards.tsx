@@ -37,7 +37,6 @@ export function PlanCards({
   current,
   onChoose,
   busy,
-  canPay = false,
   canManage = true,
   onTrial,
   trialAvailable = false,
@@ -46,7 +45,6 @@ export function PlanCards({
   current?: string;
   onChoose?: (p: PlanCardData, period: BillingPeriod) => void;
   busy?: boolean;
-  canPay?: boolean;
   canManage?: boolean;
   onTrial?: () => void;
   trialAvailable?: boolean;
@@ -174,11 +172,7 @@ export function PlanCards({
                     ? current === "FREE"
                       ? "Tu plan actual"
                       : "Incluido como base"
-                    : canPay && plan.checkout_enabled && plan.price_cents
-                      ? current === plan.code
-                        ? "Renovar con Mercado Pago"
-                        : "Elegir y pagar"
-                      : "Consultar este plan"}
+                    : "Comprar plan"}
                   <ArrowUpRight size={15} />
                 </button>
               ) : (
@@ -196,7 +190,7 @@ export function PlanCards({
                 >
                   {plan.code === "FREE"
                     ? "Registrar mi negocio"
-                    : "Ver suscripción"}
+                    : "Comprar plan"}
                   <ArrowUpRight size={15} />
                 </Link>
               )}

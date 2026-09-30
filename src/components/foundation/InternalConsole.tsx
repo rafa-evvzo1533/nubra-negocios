@@ -9,6 +9,7 @@ import s from "./Foundation.module.css";
 import { SupportAccess } from "./SupportAccess";
 import { PriceEditor } from "./PriceEditor";
 import { Brand } from "../ui/Brand";
+import { SubscriptionDuration } from "./SubscriptionDuration";
 import { businessFields, displayLabel, displayValue } from "@/domain/display";
 type Application = {
   id: string;
@@ -25,6 +26,7 @@ type Org = {
   status: string;
   plan: string;
   source: string;
+  expires_at: string | null;
   users: number;
   requested_plan: string | null;
 };
@@ -274,6 +276,11 @@ export function InternalConsole({
                         ? ` · Cambio solicitado: ${o.requested_plan}`
                         : ""}
                     </p>
+                    <p>
+                      {o.expires_at
+                        ? `Vence el ${new Date(o.expires_at).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hourCycle: "h23" })} (Argentina)`
+                        : "Sin vencimiento"}
+                    </p>
                     {canBill && (
                       <form
                         className={s.form}
@@ -288,6 +295,14 @@ export function InternalConsole({
                                 plan: f.get("plan"),
                                 source: f.get("source"),
                                 reason: f.get("reason"),
+                                duration: f.get("duration"),
+                                ...(f.get("expiresAt")
+                                  ? {
+                                      expiresAt: new Date(
+                                        String(f.get("expiresAt")),
+                                      ).toISOString(),
+                                    }
+                                  : {}),
                               },
                             },
                           );
@@ -298,7 +313,9 @@ export function InternalConsole({
                             Plan
                             <select name="plan" defaultValue={o.plan}>
                               {plans.map((p) => (
-                                <option key={p.code}>{p.code}</option>
+                                <option key={p.code} value={p.code}>
+                                  {displayLabel(p.code)}
+                                </option>
                               ))}
                             </select>
                           </label>
@@ -313,11 +330,14 @@ export function InternalConsole({
                                 "PROMOTION",
                                 "MIGRATION",
                               ].map((v) => (
-                                <option key={v}>{v}</option>
+                                <option key={v} value={v}>
+                                  {displayLabel(v)}
+                                </option>
                               ))}
                             </select>
                           </label>
                         </div>
+                        <SubscriptionDuration />
                         <label>
                           Motivo / referencia comercial
                           <input

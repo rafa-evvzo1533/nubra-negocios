@@ -9,8 +9,9 @@ por el propietario. Configurar precios y habilitar Mercado Pago son pasos indepe
 
 - `/register-business`: entrada visible al registro y estado de la solicitud.
 - `/plans`: planes, beneficios realmente disponibles y precios configurados.
-- `/settings/subscription`: plan actual, vigencia, consumo, contratación, consulta comercial e historial de pagos.
+- `/settings/subscription`: plan actual, vigencia, consumo, compra e historial de pagos. **Comprar plan** abre la confirmación de pago; si el proveedor o el precio no están habilitados, informa que el pago online no está disponible y deshabilita el pago. No crea una solicitud comercial como reemplazo.
 - `/internal`, pestaña Planes: precios mensuales y anuales en ARS, habilitación independiente de cada modalidad y capacidades. Requiere permisos internos de facturación.
+- `/internal`, pestaña Empresas y suscripciones: muestra el vencimiento y permite conservarlo, asignar 14 días, uno o tres meses, un año, una fecha/hora personalizada o sin vencimiento. Los períodos comienzan al guardar; la fecha personalizada usa la zona horaria del dispositivo. El servidor valida y registra el vencimiento en auditoría. La opción inicial conserva la vigencia actual.
 
 ## Configuración
 
@@ -48,7 +49,7 @@ Una suscripción vencida deja de resolver capacidades; el responsable conserva a
 
 Al regresar a suscripción con un pedido, la página consulta su estado durante hasta dos minutos. Si Mercado Pago proporciona `payment_id` o `collection_id`, solicita al servidor una conciliación autenticada; primero se comprueba que el pedido pertenece al negocio y después se consulta la API del proveedor. Esta vía usa exactamente las mismas validaciones que el webhook. Un parámetro `status=approved` por sí solo no tiene efecto.
 
-Cuando el pedido queda acreditado, aparece un aviso dentro de la web y se refrescan plan, vigencia y capacidades. Si la notificación llega después o el usuario cierra la página, el webhook sigue activando el plan. El botón Actualizar estado permite volver a consultar. Fallos, revisiones y devoluciones permanecen visibles en el historial.
+Cuando el pedido queda acreditado, aparece un único aviso arriba a la derecha y se refrescan plan, vigencia y capacidades. Los avisos tienen contraste, cierre manual y permanecen visibles sobre los diálogos, también en móvil. Si la notificación llega después o el usuario cierra la página, el webhook sigue activando el plan. El botón Actualizar estado permite volver a consultar. Fallos, revisiones y devoluciones permanecen visibles en el historial.
 
 Free carece de vencimiento; sus límites de uso se detallan en [capacidades](../product/ENTITLEMENTS.md). Los precios continúan configurables y no se inventan valores para habilitar pagos.
 

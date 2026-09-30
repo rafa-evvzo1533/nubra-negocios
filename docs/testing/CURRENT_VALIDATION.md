@@ -56,3 +56,24 @@ adicional a los fixtures locales de la suite. Ver [registro y limpieza](REGISTRA
 - Logs privados: `.local/deploy/build-trials-final.log`, `test-trials-final.log`
   y `lint-trials-final.log`. Las pruebas de Mercado Pago son simuladas; el
   propietario dejó las credenciales reales para después.
+
+## Favicon, compra, avisos y vigencia manual (30/09/2026)
+
+- Build local, TypeScript y lint: OK. Suite completa aislada: OK; nueve tests
+  unitarios y 110 comprobaciones de prueba/recurrencia/vigencia, con los demás
+  totales sin cambios. Log privado: `.local/deploy/test-ui.log`.
+- Vigencia: 14 días, uno/tres meses, un año, fecha personalizada, conservación
+  del vencimiento y sin vencimiento; rechazo de fechas pasadas, combinaciones
+  inválidas y acceso sin personal autorizado. Guardado desde el navegador,
+  persistencia en PostgreSQL y fecha en auditoría verificados.
+- Compra: botón explícito, confirmación sin consulta comercial, pago deshabilitado
+  cuando falta configuración y consentimiento requerido para renovación mensual.
+  Mercado Pago continúa simulado y los cobros reales deshabilitados en la VPS.
+- Avisos: un único texto tras reclamar la prueba, ubicación derecha, cierre,
+  funcionamiento sobre diálogos y tamaño móvil. Favicon PNG servido correctamente.
+- Hostname anterior: HTTP y HTTPS devuelven 404; el dominio propio conserva salud OK.
+- Build Linux y activación con respaldo previo: OK. Verificación pública con TLS:
+  login y cierre del administrador, selector de duración sin modificar datos,
+  favicon, tres enlaces de compra y avisos visibles/cerrables a 1440 y 390 px.
+  Las rutas del hostname anterior no redirigen. Sin errores de ejecución o 5xx
+  en el navegador. Evidencia privada: `.local/deploy/verify-public-ui.mjs`.
