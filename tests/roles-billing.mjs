@@ -133,6 +133,7 @@ try {
   // Price comes from the server, never from client-supplied amount.
   const price = {
     plan: "LITE",
+    period: "YEARLY",
     priceCents: 150000,
     currency: "ARS",
     enabled: true,
@@ -152,7 +153,7 @@ try {
   await call("/api/v1/billing/checkout", {
     method: "POST",
     cookie: a.cookie,
-    body: { plan: "LITE", idempotencyKey: randomUUID() },
+    body: { plan: "LITE", period: "YEARLY", idempotencyKey: randomUUID() },
     status: 409,
   });
   await call("/api/internal/admin/prices", {
@@ -164,14 +165,14 @@ try {
   await call("/api/v1/billing/checkout", {
     method: "POST",
     cookie: a.cookie,
-    body: { plan: "LITE", idempotencyKey: key, amount: 1 },
+    body: { plan: "LITE", period: "YEARLY", idempotencyKey: key, amount: 1 },
     status: 400,
   });
   const order = (
     await call("/api/v1/billing/checkout", {
       method: "POST",
       cookie: a.cookie,
-      body: { plan: "LITE", idempotencyKey: key },
+      body: { plan: "LITE", period: "YEARLY", idempotencyKey: key },
     })
   ).data;
   assert.equal(
@@ -184,7 +185,7 @@ try {
     await call("/api/v1/billing/checkout", {
       method: "POST",
       cookie: a.cookie,
-      body: { plan: "LITE", idempotencyKey: key },
+      body: { plan: "LITE", period: "YEARLY", idempotencyKey: key },
     })
   ).data;
   assert.equal(again.id, order.id);
@@ -193,7 +194,7 @@ try {
   await call("/api/v1/billing/checkout", {
     method: "POST",
     cookie: a.cookie,
-    body: { plan: "LITE", idempotencyKey: randomUUID() },
+    body: { plan: "LITE", period: "YEARLY", idempotencyKey: randomUUID() },
     status: 409,
   });
   assert.equal(
@@ -278,7 +279,7 @@ try {
   await call("/api/v1/billing/checkout", {
     method: "POST",
     cookie: a.cookie,
-    body: { plan: "LITE", idempotencyKey: key },
+    body: { plan: "LITE", period: "YEARLY", idempotencyKey: key },
     status: 409,
   });
   // Role assignment and live revocation.
@@ -324,7 +325,7 @@ try {
   await call("/api/v1/billing/checkout", {
     method: "POST",
     cookie: custom,
-    body: { plan: "LITE", idempotencyKey: randomUUID() },
+    body: { plan: "LITE", period: "YEARLY", idempotencyKey: randomUUID() },
     status: 403,
   });
   await call("/api/v1/roles/" + role, {
@@ -420,7 +421,11 @@ try {
   const browserErrors = [];
   page.on("pageerror", (error) => {
     browserErrors.push(new URL(page.url()).pathname + ": " + error.message);
-    console.error("Roles browser error:", new URL(page.url()).pathname, error.message);
+    console.error(
+      "Roles browser error:",
+      new URL(page.url()).pathname,
+      error.message,
+    );
   });
   const failed = [];
   page.on("response", (r) => {

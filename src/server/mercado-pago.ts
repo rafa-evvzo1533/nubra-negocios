@@ -23,7 +23,7 @@ export function verifyMercadoPagoSignature(
     !signature ||
     !requestId ||
     requestId.length > 200 ||
-    !/^\d+$/.test(dataId)
+    !/^[a-zA-Z0-9-]{1,80}$/.test(dataId)
   )
     return false;
   const fields = Object.fromEntries(
@@ -35,7 +35,7 @@ export function verifyMercadoPagoSignature(
   const timestamp = Number(ts) * (ts.length === 10 ? 1000 : 1);
   if (Math.abs(now - timestamp) > 600000) return false;
   const expected = createHmac("sha256", secret)
-    .update(`id:${dataId};request-id:${requestId};ts:${ts};`)
+    .update(`id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`)
     .digest();
   return timingSafeEqual(expected, Buffer.from(v1, "hex"));
 }

@@ -10,9 +10,10 @@ import {
   FileText,
   ShieldCheck,
   Check,
-  Layers3,
+  Sparkles,
 } from "lucide-react";
 import { Brand } from "../ui/Brand";
+import { ProductTour } from "./ProductTour";
 import s from "./Foundation.module.css";
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
@@ -44,9 +45,11 @@ export function Landing() {
     <PublicShell>
       <section className={`${s.hero} ${s.landingHero}`}>
         <div>
-          <span className={s.heroLabel}>
-            <span /> TU NEGOCIO. TODO CONECTADO.
-          </span>
+          <Link href="/plans" className={s.heroPill}>
+            <Sparkles size={15} />
+            Probá Business gratis por 14 días
+            <ArrowUpRight size={14} />
+          </Link>
           <h1>
             Menos vueltas.
             <br />
@@ -60,7 +63,7 @@ export function Landing() {
           </p>
           <div className={s.actions}>
             <Link className="primary-button" href="/register-business">
-              Crear mi negocio <ArrowUpRight size={18} />
+              Empezar gratis <ArrowUpRight size={18} />
             </Link>
             <Link className="secondary-button" href="/#producto">
               Conocer la plataforma <ArrowRight size={16} />
@@ -77,52 +80,26 @@ export function Landing() {
             </span>
             <span>
               <Check size={15} />
-              Acceso sujeto a aprobación
+              Tus datos se conservan
             </span>
           </div>
         </div>
-        <div className={s.productVisual}>
-          <div className={s.visualTop}>
-            <span>
-              <Layers3 size={16} /> Tu centro de operaciones
-            </span>
-            <span className={s.badge}>NUBRA</span>
-          </div>
-          <div className={s.visualBrand}>
-            <Brand size={190} />
-            <div>
-              <span className={s.eyebrow}>Una visión más clara</span>
-              <h2>
-                Todo encuentra
-                <br />
-                su lugar.
-              </h2>
-            </div>
-          </div>
-          <div className={s.modulePreview}>
-            {[
-              [Users, "Clientes", "Relaciones que crecen"],
-              [Package, "Inventario", "Cada unidad cuenta"],
-              [ShoppingBag, "Ventas", "Operaciones conectadas"],
-              [Wallet, "Caja", "Movimientos claros"],
-            ].map(([Icon, title, description]) => {
-              const I = Icon as typeof Users;
-              return (
-                <div key={String(title)}>
-                  <I size={20} />
-                  <span>
-                    <strong>{String(title)}</strong>
-                    <small>{String(description)}</small>
-                  </span>
-                  <ArrowUpRight size={14} />
-                </div>
-              );
-            })}
-          </div>
-          <p className={s.visualCaption}>
-            Un espacio de trabajo propio para cada negocio.
+        <ProductTour />
+      </section>
+      <section className={s.trialBand}>
+        <div>
+          <span className={s.eyebrow}>DALE ESPACIO A TU NEGOCIO</span>
+          <h2>Dos semanas. Todas las capacidades de Business.</h2>
+          <p>
+            Registrá tu negocio y, una vez aprobado, reclamá la prueba desde
+            Suscripciones. Sin tarjeta: al terminar los 14 días volvés a Free
+            automáticamente.
           </p>
         </div>
+        <Link href="/settings/subscription" className="primary-button">
+          Quiero probar Business
+          <ArrowUpRight size={17} />
+        </Link>
       </section>
       <section id="producto" className={s.marketingSection}>
         <div className={s.sectionIntro}>

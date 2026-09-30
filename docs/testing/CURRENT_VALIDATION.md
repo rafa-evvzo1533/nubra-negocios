@@ -36,3 +36,23 @@ tabla. Log: `.local/deploy/test-registration-cleanup.log`.
 La VPS compiló correctamente con Node 24 y `npm ci`. La verificación SMTP real
 pasó y el propietario confirmó la recepción del correo de registro. Esto es
 adicional a los fixtures locales de la suite. Ver [registro y limpieza](REGISTRATION_DEPLOYMENT.md).
+
+## Portada, prueba de Business y renovación mensual (30/09/2026 UTC)
+
+- Build local y Linux, lint y `npm run test:all`: OK.
+- Nueva migración `0012_trials_and_recurring.sql`; replay sobre base aislada: OK.
+- Nuevas 72 comprobaciones: reclamos concurrentes (solo uno aceptado), duración
+  exacta de 14 días, vuelta a Free, límites restaurados, reclamo repetido rechazado,
+  permisos, consentimiento de renovación, precios del servidor, aislamiento,
+  facturas repetidas, primer cobro, siguiente mes, cancelación idempotente,
+  evento tardío, devolución y conversión de prueba a plan pagado.
+- Navegador: reclamo y vencimiento visible, logo de recuperación, recorrido
+  interactivo de portada, ausencia de desbordamiento y movimiento reducido.
+- Las suites anteriores mantuvieron sus resultados: 90 foundation, 100 roles/pagos,
+  63 comercio, 65 seguridad, 144 integración, navegador, 63 operaciones/OCR,
+  126 responsive y ocho tests unitarios.
+- El fixture de recurrencia usa su propio administrador para evitar consumir
+  el límite de intentos del administrador de las otras suites.
+- Logs privados: `.local/deploy/build-trials-final.log`, `test-trials-final.log`
+  y `lint-trials-final.log`. Las pruebas de Mercado Pago son simuladas; el
+  propietario dejó las credenciales reales para después.

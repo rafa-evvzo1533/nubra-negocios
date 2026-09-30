@@ -26,14 +26,17 @@ export default async function Page() {
             <div>
               <h3>¿Puedo comenzar gratis?</h3>
               <p>
-                Sí. Creá tu cuenta, verificá tu email y presentá tu negocio.
-                Tras la aprobación, comenzás en Free sin ingresar una tarjeta.
+                Sí. Tras verificar tu email y aprobarse tu negocio, comenzás en
+                Free. Podés reclamar una prueba de Business por 14 días, una
+                sola vez, sin tarjeta. Al terminar volvés a Free
+                automáticamente.
               </p>
               <h3>¿Cómo se paga?</h3>
               <p>
                 Desde la sección de suscripciones de tu negocio. Cuando el plan
                 tenga un precio habilitado, podrás pagar en Mercado Pago por un
-                mes o un año completo, según la opción elegida.
+                mes con renovación automática o un año completo en un pago
+                único.
               </p>
             </div>
             <div>
@@ -45,9 +48,9 @@ export default async function Page() {
               </p>
               <h3>¿La renovación es automática?</h3>
               <p>
-                No. Cada pago habilita un mes o un año. Podés renovar
-                desde tu negocio al finalizar ese período, sin débitos
-                automáticos.
+                El plan mensual se cobra automáticamente cada mes hasta que
+                canceles desde Suscripciones. El anual es un pago único. La
+                prueba gratuita finaliza sola y no genera cobros.
               </p>
             </div>
           </div>

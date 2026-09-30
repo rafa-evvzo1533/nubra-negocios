@@ -70,7 +70,7 @@ export const postgres = {
 export function ensureFoundationSchema() {
   return (globalForPostgres.schemaReady ??= postgres
     .query(
-      "SELECT version FROM schema_migrations WHERE version='0011_billing_periods_local_plans.sql'",
+      "SELECT version FROM schema_migrations WHERE version='0012_trials_and_recurring.sql'",
     )
     .then((result) => {
       if (!result.rows.length)

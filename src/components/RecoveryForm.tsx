@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { Brand } from "./ui/Brand";
 import styles from "@/app/login/login.module.css";
 export function RecoveryForm({ reset = false }: { reset?: boolean }) {
   const [token, setToken] = useState("");
@@ -48,7 +49,9 @@ export function RecoveryForm({ reset = false }: { reset?: boolean }) {
   return (
     <main className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.logo}>N</div>
+        <Link href="/" aria-label="Nubra Negocios · Inicio">
+          <Brand size={100} />
+        </Link>
         <h1>{reset ? "Elegí una nueva contraseña" : "Recuperá tu acceso"}</h1>
         <p className={styles.description}>
           {reset

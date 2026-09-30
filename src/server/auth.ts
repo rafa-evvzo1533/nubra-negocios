@@ -135,6 +135,9 @@ export async function getUserSession(): Promise<UserSession | null> {
   const session = result.rows[0];
   if (session) {
     bindOrganization(session);
+    await postgres.query("SELECT nubra_expire_trials($1)", [
+      session.organizationId,
+    ]);
     await postgres.query(
       "UPDATE sessions SET last_seen_at=NOW() WHERE id=$1 AND last_seen_at<NOW()-INTERVAL '1 minute'",
       [session.sessionId],

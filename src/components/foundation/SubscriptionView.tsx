@@ -17,6 +17,7 @@ type Data = {
     source: string;
     status: string;
     expires_at: string | null;
+    trial_ends_at?: string | null;
   };
   usage: Record<string, number>;
   entitlements: {
@@ -29,6 +30,16 @@ type Data = {
   plans: PlanCardData[];
   billingReady: boolean;
   canManage: boolean;
+  trialAvailable: boolean;
+  recurring: {
+    id: string;
+    name: string;
+    status: string;
+    amount_cents: number;
+    currency: string;
+    next_payment_at: string | null;
+    checkout_url: string | null;
+  } | null;
 };
 type Order = {
   id: string;
@@ -50,6 +61,9 @@ const statuses: Record<string, string> = {
 };
 export function SubscriptionView({ data }: { data: Data }) {
   const router = useRouter();
+  const [trialDialog, setTrialDialog] = useState(false);
+  const [cancelDialog, setCancelDialog] = useState(false);
+  const [renewalConsent, setRenewalConsent] = useState(false);
   const [selected, setSelected] = useState<PlanCardData | null>(null),
     [period, setPeriod] = useState<BillingPeriod>("MONTHLY"),
     [busy, setBusy] = useState(false),
@@ -62,6 +76,42 @@ export function SubscriptionView({ data }: { data: Data }) {
     period: BillingPeriod;
     id: string;
   } | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("agreement");
+    if (!data.canManage || !id || id !== data.recurring?.id) return;
+    let active = true,
+      attempts = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    async function checkRecurring() {
+      try {
+        await api("/api/v1/billing/recurring", "PATCH", { id, action: "sync" });
+        const current: Data = await api("/api/v1/subscription");
+        if (!active) return;
+        router.refresh();
+        if (
+          current.subscription.source === "DIRECT_PURCHASE" ||
+          current.recurring?.status === "CANCELLED"
+        )
+          return;
+        setMessage(
+          "Esperando la autorización y el primer pago de Mercado Pago. Business se activa después de la acreditación.",
+        );
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error
+              ? e.message
+              : "No pudimos consultar la renovación",
+          );
+      }
+      if (active && ++attempts < 12) timer = setTimeout(checkRecurring, 10000);
+    }
+    void checkRecurring();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [data.canManage, data.recurring?.id, router]);
   useEffect(() => {
     if (!data.canManage) return;
     const params = new URLSearchParams(window.location.search);
@@ -148,11 +198,19 @@ export function SubscriptionView({ data }: { data: Data }) {
             period,
             id: crypto.randomUUID(),
           };
-        const result = await api("/api/v1/billing/checkout", "POST", {
-          plan: selected.code,
-          period,
-          idempotencyKey: key.current.id,
-        });
+        if (period === "MONTHLY" && !renewalConsent)
+          throw new Error("Confirmá que aceptás la renovación mensual");
+        const result = await api(
+          period === "MONTHLY"
+            ? "/api/v1/billing/recurring"
+            : "/api/v1/billing/checkout",
+          "POST",
+          {
+            plan: selected.code,
+            idempotencyKey: key.current.id,
+            ...(period === "MONTHLY" ? { automaticRenewal: true } : { period }),
+          },
+        );
         window.location.assign(result.url);
       } else {
         const result = await api("/api/v1/subscription", "POST", {
@@ -174,6 +232,31 @@ export function SubscriptionView({ data }: { data: Data }) {
     data.billingReady &&
     selected.checkout_enabled &&
     selected.price_cents;
+  async function subscriptionAction(action: "trial" | "cancel" | "sync") {
+    setBusy(true);
+    setError("");
+    try {
+      const result =
+        action === "trial"
+          ? await api("/api/v1/subscription/trial", "POST", {})
+          : await api("/api/v1/billing/recurring", "PATCH", {
+              id: data.recurring!.id,
+              action,
+            });
+      notify(result.message);
+      setMessage(result.message);
+      setTrialDialog(false);
+      setCancelDialog(false);
+      router.refresh();
+      setRevision((r) => r + 1);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo completar la operación",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <main className={s.page}>
       <div className={s.content}>
@@ -217,6 +300,88 @@ export function SubscriptionView({ data }: { data: Data }) {
             Actualizar estado
           </button>
         </section>
+        {data.subscription?.source === "BUSINESS_TRIAL" && (
+          <section className={`${s.card} ${s.trialOffer}`}>
+            <h2>Tu prueba de Business está activa</h2>
+            <p>
+              Disfrutá las capacidades de Business hasta el{" "}
+              {new Date(data.subscription.trial_ends_at!).toLocaleDateString(
+                "es-AR",
+                { timeZone: "UTC" },
+              )}
+              . Después volvés automáticamente a Free, sin cargos y conservando
+              tus datos.
+            </p>
+          </section>
+        )}
+        {data.recurring && (
+          <section className={s.card}>
+            <h2>Renovación mensual</h2>
+            <p>
+              {data.recurring.name} ·{" "}
+              {formatPrice(
+                data.recurring.amount_cents,
+                data.recurring.currency,
+              )}{" "}
+              por mes.
+            </p>
+            <p>
+              {
+                (
+                  {
+                    CREATING: "Preparando suscripción",
+                    PENDING: "Pendiente de autorización en Mercado Pago",
+                    AUTHORIZED: "Renovación automática activa",
+                    PAUSED: "Renovación pausada",
+                    CANCELLED: "Renovación cancelada",
+                    REVIEW: "Requiere revisión de NUBRA",
+                  } as Record<string, string>
+                )[data.recurring.status]
+              }
+            </p>
+            {data.recurring.next_payment_at &&
+              data.recurring.status !== "CANCELLED" && (
+                <p>
+                  Próximo cobro previsto:{" "}
+                  {new Date(data.recurring.next_payment_at).toLocaleDateString(
+                    "es-AR",
+                    { timeZone: "UTC" },
+                  )}
+                  .
+                </p>
+              )}
+            <div className={s.actions}>
+              {data.recurring.checkout_url && (
+                <a
+                  className="primary-button"
+                  href={data.recurring.checkout_url}
+                >
+                  Continuar en Mercado Pago
+                </a>
+              )}
+              <button
+                className="secondary-button"
+                disabled={busy}
+                onClick={() => subscriptionAction("sync")}
+              >
+                Consultar renovación
+              </button>
+              {data.recurring.status !== "CANCELLED" && (
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={() => setCancelDialog(true)}
+                >
+                  Cancelar renovación
+                </button>
+              )}
+            </div>
+            <p>
+              Cancelar detiene los próximos cobros. Conservás el período que ya
+              pagaste.
+            </p>
+          </section>
+        )}
         {message && (
           <p role="status" className="notice-success">
             {message}
@@ -232,12 +397,18 @@ export function SubscriptionView({ data }: { data: Data }) {
           current={data.subscription?.code}
           onChoose={(p, chosenPeriod) => {
             setError("");
+            setRenewalConsent(false);
             setPeriod(chosenPeriod);
             setSelected(p);
           }}
           busy={busy}
           canPay={data.billingReady}
           canManage={data.canManage}
+          trialAvailable={data.trialAvailable}
+          onTrial={() => {
+            setError("");
+            setTrialDialog(true);
+          }}
         />
         <p className={s.paymentNote}>
           <CreditCard size={18} />
@@ -352,9 +523,20 @@ export function SubscriptionView({ data }: { data: Data }) {
               <h3>{selected.name}</h3>
               <p className={s.muted}>
                 {payable
-                  ? `${formatPrice(selected.price_cents!, selected.currency)} por ${period === "YEARLY" ? "un año" : "un mes"}. Es un pago único por el período elegido, sin débito automático. Vas a continuar en Mercado Pago.`
+                  ? `${formatPrice(selected.price_cents!, selected.currency)} ${period === "YEARLY" ? "por el año completo, en un pago único." : "por mes, con renovación y cobro automático hasta que canceles desde esta pantalla. El primer cobro se realiza al autorizar la suscripción."} Vas a continuar en Mercado Pago.`
                   : "Enviaremos una solicitud al equipo de NUBRA. Esta consulta no genera ningún cobro ni cambia tu plan actual."}
               </p>
+              {payable && period === "MONTHLY" && (
+                <label className={s.check}>
+                  <input
+                    type="checkbox"
+                    checked={renewalConsent}
+                    onChange={(e) => setRenewalConsent(e.target.checked)}
+                  />
+                  Acepto la renovación y el cobro automático mensual del importe
+                  indicado hasta que cancele.
+                </label>
+              )}
               {error && (
                 <p role="alert" className="notice-error">
                   {error}
@@ -363,7 +545,10 @@ export function SubscriptionView({ data }: { data: Data }) {
               <div className={s.actions}>
                 <button
                   className="primary-button"
-                  disabled={busy}
+                  disabled={
+                    busy ||
+                    Boolean(payable && period === "MONTHLY" && !renewalConsent)
+                  }
                   onClick={() => confirm()}
                 >
                   {busy
@@ -389,6 +574,59 @@ export function SubscriptionView({ data }: { data: Data }) {
                   Cancelar
                 </button>
               </div>
+            </div>
+          </Dialog>
+        )}
+        {trialDialog && (
+          <Dialog
+            title="Probá Business por 14 días"
+            onClose={() => setTrialDialog(false)}
+            busy={busy}
+          >
+            <div className={s.form}>
+              <p>
+                La prueba comienza ahora y está disponible una sola vez por
+                negocio. No requiere tarjeta ni genera cobros. Al finalizar,
+                volvés a Free y tus datos se conservan.
+              </p>
+              {error && (
+                <p role="alert" className="notice-error">
+                  {error}
+                </p>
+              )}
+              <button
+                className="primary-button"
+                disabled={busy}
+                onClick={() => subscriptionAction("trial")}
+              >
+                {busy ? "Activando…" : "Activar mis 14 días gratis"}
+              </button>
+            </div>
+          </Dialog>
+        )}
+        {cancelDialog && (
+          <Dialog
+            title="Cancelar renovación mensual"
+            onClose={() => setCancelDialog(false)}
+            busy={busy}
+          >
+            <div className={s.form}>
+              <p>
+                Vamos a cancelar la autorización en Mercado Pago para detener
+                los próximos cobros. El período ya pagado se mantiene.
+              </p>
+              {error && (
+                <p role="alert" className="notice-error">
+                  {error}
+                </p>
+              )}
+              <button
+                className="primary-button"
+                disabled={busy}
+                onClick={() => subscriptionAction("cancel")}
+              >
+                {busy ? "Cancelando…" : "Confirmar cancelación"}
+              </button>
             </div>
           </Dialog>
         )}

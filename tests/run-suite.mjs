@@ -24,9 +24,54 @@ const payments = new Map(),
   preferences = [];
 globalThis.__nubraTestPayments = payments;
 globalThis.__nubraTestPreferences = preferences;
+const agreements = new Map(),
+  invoices = new Map();
+globalThis.__nubraTestAgreements = agreements;
+globalThis.__nubraTestInvoices = invoices;
 const mp = http.createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
-  if (req.method === "POST" && req.url === "/checkout/preferences") {
+  if (req.method === "POST" && req.url === "/preapproval") {
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    const data = JSON.parse(raw),
+      id = "agreement" + String(agreements.size + 1);
+    const item = {
+      ...data,
+      id,
+      collector_id: process.env.MP_COLLECTOR_ID,
+      init_point:
+        "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_id=" +
+        id,
+      next_payment_date: null,
+    };
+    agreements.set(id, item);
+    res.end(JSON.stringify(item));
+  } else if (
+    req.url.startsWith("/preapproval/") &&
+    agreements.has(req.url.split("/").at(-1))
+  ) {
+    const item = agreements.get(req.url.split("/").at(-1));
+    if (req.method === "PUT") {
+      let raw = "";
+      for await (const chunk of req) raw += chunk;
+      Object.assign(item, JSON.parse(raw));
+    }
+    res.end(JSON.stringify(item));
+  } else if (req.url.startsWith("/authorized_payments/search")) {
+    const id = new URL(req.url, "http://localhost").searchParams.get(
+      "preapproval_id",
+    );
+    res.end(
+      JSON.stringify({
+        results: [...invoices.values()].filter((i) => i.preapproval_id === id),
+      }),
+    );
+  } else if (
+    req.url.startsWith("/authorized_payments/") &&
+    invoices.has(req.url.split("/").at(-1))
+  ) {
+    res.end(JSON.stringify(invoices.get(req.url.split("/").at(-1))));
+  } else if (req.method === "POST" && req.url === "/checkout/preferences") {
     let raw = "";
     for await (const chunk of req) raw += chunk;
     const data = JSON.parse(raw);
@@ -163,6 +208,7 @@ try {
   if (process.argv[2] !== "security") {
     await import("./foundation.mjs");
     await import("./roles-billing.mjs");
+    await import("./trials-recurring.mjs");
     await import("./commerce.mjs");
   }
   await import("./security.mjs");

@@ -39,6 +39,8 @@ export function PlanCards({
   busy,
   canPay = false,
   canManage = true,
+  onTrial,
+  trialAvailable = false,
 }: {
   plans: PlanCardData[];
   current?: string;
@@ -46,6 +48,8 @@ export function PlanCards({
   busy?: boolean;
   canPay?: boolean;
   canManage?: boolean;
+  onTrial?: () => void;
+  trialAvailable?: boolean;
 }) {
   const [period, setPeriod] = useState<BillingPeriod>("MONTHLY");
   return (
@@ -116,19 +120,46 @@ export function PlanCards({
                   </small>
                 )}
               </div>
-              {period === "YEARLY" && plan.code !== "FREE" && annualSavings > 0 && (
-                <p className={s.annualSavings}>
-                  Ahorrás {formatPrice(annualSavings, plan.currency)} al año
-                  <span>Comparado con 12 pagos mensuales.</span>
-                </p>
-              )}
+              {period === "YEARLY" &&
+                plan.code !== "FREE" &&
+                annualSavings > 0 && (
+                  <p className={s.annualSavings}>
+                    Ahorrás {formatPrice(annualSavings, plan.currency)} al año
+                    <span>Comparado con 12 pagos mensuales.</span>
+                  </p>
+                )}
               <p className={s.period}>
                 {plan.code === "FREE"
                   ? "Sin vencimiento. Límites de uso."
                   : plan.price_cents
-                    ? "Pago único por período. Sin débito automático."
+                    ? period === "MONTHLY"
+                      ? "Renovación automática mensual. Cancelá cuando quieras."
+                      : "Pago único por el año completo."
                     : "Precio a confirmar por NUBRA."}
               </p>
+              {plan.code === "BUSINESS" && (!onChoose || trialAvailable) && (
+                <div className={s.trialOffer}>
+                  <strong>14 días de Business gratis</strong>
+                  <span>Sin tarjeta. Al terminar, volvés a Free.</span>
+                  {onTrial ? (
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      disabled={busy || !canManage}
+                      onClick={onTrial}
+                    >
+                      Reclamar prueba gratis
+                    </button>
+                  ) : (
+                    <Link
+                      href="/settings/subscription"
+                      className="secondary-button"
+                    >
+                      Reclamar prueba gratis
+                    </Link>
+                  )}
+                </div>
+              )}
               {onChoose ? (
                 <button
                   className={

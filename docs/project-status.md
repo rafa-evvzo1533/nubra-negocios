@@ -20,7 +20,7 @@ También se conserva el trabajo previo solicitado: logo oficial, inicio y admini
 
 ## Configuración externa pendiente
 
-Los cobros públicos necesitan credenciales, vendedor, webhook, URL pública HTTPS y precios; ver [configuración](integrations/SUBSCRIPTIONS.md). La integración cobra un mes o un año y activa automáticamente al acreditar; **no realiza débito recurrente**. La [VPS está publicada](deployment/VPS_DEPLOYED.md), con HTTPS y SMTP de Hostinger verificados; el propietario confirmó la recepción del correo de registro. Cloud Hosting con hPanel conserva su guía alternativa, sin despliegue verificado en ese servicio.
+Los cobros públicos necesitan las credenciales y configuración de Mercado Pago que el propietario dejó para después; ver [configuración](integrations/SUBSCRIPTIONS.md). La renovación mensual automática está implementada con autorización explícita y cancelación; el anual conserva pago único. Las pruebas usan el proveedor simulado, sin cobros reales. La prueba gratuita de Business dura 14 días y vuelve a Free automáticamente, sin tarjeta. La [VPS está publicada](deployment/VPS_DEPLOYED.md), con HTTPS y SMTP de Hostinger verificados; el propietario confirmó la recepción del correo de registro. Cloud Hosting con hPanel conserva su guía alternativa, sin despliegue verificado en ese servicio.
 
 Persisten pendientes de la entrega de seguridad: MFA, proveedor de claves y migración del cifrado de campos existentes, y copias externas a la VPS. El respaldo diario local y su restauración se probaron. El servicio de cifrado existe, pero no se presenta como si los datos históricos ya estuvieran cifrados. Los documentos legales conservan su revisión pendiente.
 

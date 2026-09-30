@@ -124,7 +124,7 @@ export async function subscriptionSummary() {
   if (!ctx) throw new HttpError(401, "Iniciá sesión");
   const subscription = (
     await postgres.query(
-      `SELECT p.code,p.name,s.source,CASE WHEN s.expires_at<=NOW() THEN 'EXPIRED' ELSE s.status END AS status,s.expires_at FROM subscriptions s JOIN plans p ON p.id=s.plan_id WHERE organization_id=$1`,
+      `SELECT p.code,p.name,s.source,CASE WHEN s.expires_at<=NOW() THEN 'EXPIRED' ELSE s.status END AS status,s.expires_at,s.trial_claimed_at,s.trial_ends_at FROM subscriptions s JOIN plans p ON p.id=s.plan_id WHERE organization_id=$1`,
       [ctx.organizationId],
     )
   ).rows[0];
@@ -152,6 +152,16 @@ export async function subscriptionSummary() {
   );
   return {
     subscription,
+    trialAvailable:
+      subscription?.code === "FREE" && !subscription?.trial_claimed_at,
+    recurring: ["OWNER", "ADMINISTRATOR", "ADMIN"].includes(ctx.role)
+      ? ((
+          await postgres.query(
+            "SELECT a.id,p.name,a.status,a.amount_cents,a.currency,a.next_payment_at,CASE WHEN a.status='PENDING' THEN a.checkout_url END AS checkout_url FROM billing_agreements a JOIN plans p ON p.id=a.plan_id WHERE a.organization_id=$1 ORDER BY a.created_at DESC LIMIT 1",
+            [ctx.organizationId],
+          )
+        ).rows[0] ?? null)
+      : null,
     entitlements: await entitlements(ctx.organizationId),
     usage: {
       ...usage,

@@ -16,11 +16,21 @@ por el propietario. Configurar precios y habilitar Mercado Pago son pasos indepe
 
 1. Ejecutar `npm run migrate` y configurar el correo SMTP para registro e invitaciones.
 2. Configurar `APP_URL` con la URL pública HTTPS, `MP_ACCESS_TOKEN`, `MP_COLLECTOR_ID` (identificador del vendedor) y `MP_WEBHOOK_SECRET` de la aplicación de Mercado Pago, únicamente en el servidor.
-3. Registrar el webhook de pagos en `https://tu-dominio/api/billing/mercadopago/webhook`, habilitando el evento de pagos.
+3. Registrar `https://negocios.nubradigital.net/api/billing/mercadopago/webhook`, habilitando `payment`, `subscription_preapproval` y `subscription_authorized_payment`. El mismo endpoint enruta cada tipo; `/api/billing/mercadopago/subscriptions` también admite los eventos de suscripción.
 4. Usar `MP_MODE=sandbox` y credenciales/cuentas de prueba; activar `BILLING_ENABLED=true`. Para producción usar `MP_MODE=live` y las credenciales correspondientes.
 5. Cargar el precio y marcar “Habilitar compra de este plan” en administración. Reiniciar el servidor tras cambiar variables de entorno.
 
-La implementación usa Checkout Pro: pago único por un mes o un año calendario y renovación manual, sin débito automático. No se integró la API de suscripciones recurrentes. Cada pedido guarda precio y modalidad, y los pedidos ya creados mantienen esas condiciones durante su vigencia de 24 horas. Los anteriores a `0011` conservan 30 días (`LEGACY_30_DAYS`). La operación del proveedor debe validarse con cuentas de prueba reales antes de habilitar cobros públicos; las pruebas automatizadas usan una API simulada local.
+Los nuevos planes mensuales usan Suscripciones de Mercado Pago: autorización mediante `/preapproval`, frecuencia de un mes y consentimiento explícito antes de continuar al proveedor. Los anuales conservan Checkout Pro con pago único. Los pedidos antiguos conservan su modalidad; los anteriores a `0011` mantienen 30 días (`LEGACY_30_DAYS`). Los precios se guardan al contratar y no se modifican retroactivamente al editar el catálogo.
+
+El propietario dejó las credenciales de Mercado Pago pendientes para una próxima etapa. El código se verifica con un proveedor simulado; la VPS mantiene los cobros deshabilitados. Antes de habilitarlos se debe probar una autorización, un cobro y una cancelación con las cuentas reales de prueba del proveedor.
+
+## Prueba de Business y renovación mensual
+
+Un responsable de un negocio aprobado en Free puede reclamar Business por 14 días, una sola vez por negocio. No requiere tarjeta ni crea una autorización de pago. La migración `0012` registra el inicio y el fin; la función `nubra_expire_trials` devuelve el negocio a Free conservando datos e historial. Se ejecuta al acceder al negocio y cada cinco minutos con `nubra-negocios-subscriptions.timer`.
+
+La renovación mensual es independiente de esa prueba. La autorización pendiente o autorizada no concede acceso por sí sola: se consulta la factura en `/authorized_payments/{id}` y el pago en `/v1/payments/{id}`. Se comprueban vínculo, vendedor, ambiente, importe y moneda antes de acreditar. Una factura repetida no extiende dos veces la vigencia. Cada nuevo pago crea un pedido mensual auditable.
+
+El botón **Cancelar renovación** revoca la autorización en Mercado Pago y solo confirma el resultado después de verificar `cancelled`. Conserva el período ya pagado. Hay una sola autorización abierta por negocio; una creación incierta queda en revisión para evitar cobros duplicados. Se puede consultar el estado desde la pantalla, al regresar del proveedor y mediante la tarea programada. Los eventos de pago siguen procesando devoluciones de pedidos recurrentes conocidos.
 
 Los vencimientos nuevos agregan uno o doce meses en UTC, ajustando al último día si no existe el día original (31/enero → último día de febrero; 29/febrero anual → 28/febrero siguiente). Renovar el mismo plan activo suma el período después del vencimiento vigente. Las cuotas de ventas/exportaciones siguen siendo mensuales, incluso al pagar anual. Los precios anuales se cargan por su importe total; no hay descuento inventado ni multiplicación automática por doce.
 
@@ -42,4 +52,4 @@ Cuando el pedido queda acreditado, aparece un aviso dentro de la web y se refres
 
 Free carece de vencimiento; sus límites de uso se detallan en [capacidades](../product/ENTITLEMENTS.md). Los precios continúan configurables y no se inventan valores para habilitar pagos.
 
-Referencias oficiales: [Preferencias de Checkout Pro](https://www.mercadopago.com.ar/developers/en/reference/online-payments/checkout-pro-preferences/create-preference/post) y [Webhooks](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-preferences/additional-content/notifications/webhooks).
+Referencias oficiales: [crear suscripción](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/create-preapproval/post), [consultar suscripción](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/get-preapproval/get), [actualizar o cancelar](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/update-preapproval/put), [facturas recurrentes](https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/get-authorized-payment/get) y [Webhooks](https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-preferences/additional-content/notifications/webhooks).

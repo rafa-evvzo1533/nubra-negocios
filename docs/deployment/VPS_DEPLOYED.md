@@ -14,13 +14,15 @@ Dominio propio activado el 30/09/2026 UTC. El hostname anterior
   Se conserva el Node.js global que usan los otros proyectos.
 - Versión inicial: `/opt/nubra-negocios/releases/20260930-https`, mediante el
   enlace `/opt/nubra-negocios/current`.
-- Versión vigente: `/opt/nubra-negocios/releases/20260930-prices`, con
-  registro SMTP, correcciones de avisos, limpieza de módulos sin uso y ahorro anual
-  visible en los planes. Precios mensuales/anuales guardados en PostgreSQL.
+- Versión vigente: `/opt/nubra-negocios/releases/20260930-trials`, con
+  portada interactiva y animaciones accesibles, logo oficial en recuperación,
+  prueba de Business y renovación mensual implementada. Precios mensuales/anuales
+  guardados en PostgreSQL; Mercado Pago pendiente de credenciales del propietario.
 - Servicio systemd `nubra-negocios`, usuario sin privilegios `nubra-negocios`,
   escucha exclusivamente en `127.0.0.1:3200` y reinicia ante fallos.
 - PostgreSQL 16 en el proyecto Docker Compose `nubra-negocios`, volumen propio,
-  publicado solo en `127.0.0.1:55432`. Las doce migraciones fueron aplicadas.
+  publicado solo en `127.0.0.1:55432`. Trece migraciones aplicadas, incluida
+  `0012_trials_and_recurring.sql` para pruebas y autorizaciones mensuales.
   Base nueva; no se importaron datos del entorno local.
 - Credencial web sin privilegios administrativos, miembro NOINHERIT de
   `nubra_runtime`. Secretos de ejecución y aprovisionamiento separados en
@@ -63,6 +65,11 @@ El timer `nubra-negocios-backup.timer` crea un dump diario a las 06:15 UTC
 Son copias en la misma VPS; falta configurar almacenamiento externo para cubrir
 la pérdida completa del servidor. La restauración requiere también provisionar
 los roles SQL, como detalla la guía de aislamiento.
+
+`nubra-negocios-subscriptions.timer` ejecuta el vencimiento de pruebas cada cinco
+minutos y también al acceder al negocio. Cuando se configure Mercado Pago,
+la misma tarea conciliará las autorizaciones y facturas recurrentes. El servicio
+corre como `nubra-negocios` con las credenciales limitadas de ejecución.
 
 SMTP de Hostinger quedó habilitado el 30/09/2026 UTC: se verificaron TLS y
 autenticación desde la VPS, y el propietario confirmó que recibió el correo de

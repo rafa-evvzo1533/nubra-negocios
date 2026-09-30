@@ -56,12 +56,29 @@ export async function checkout(body: unknown) {
     .parse(body);
   if (!billingReady())
     throw new HttpError(503, "Los pagos online todavía no están habilitados.");
+  if (v.period === "MONTHLY")
+    throw new HttpError(
+      409,
+      "Los planes mensuales se contratan con renovación automática desde Suscripciones",
+    );
   if (!(await allowAuthAttempt("checkout:" + ctx.userId, 15)))
     throw new HttpError(429, "Demasiados intentos de pago");
   const order = await transaction(async (db) => {
     await db.query("SELECT id FROM organizations WHERE id=$1 FOR UPDATE", [
       ctx.organizationId,
     ]);
+    if (
+      (
+        await db.query(
+          "SELECT id FROM billing_agreements WHERE organization_id=$1 AND status<>'CANCELLED'",
+          [ctx.organizationId],
+        )
+      ).rows.length
+    )
+      throw new HttpError(
+        409,
+        "Cancelá la renovación mensual antes de contratar otro período",
+      );
     const prior = (
       await db.query<{
         id: string;
@@ -116,6 +133,7 @@ export async function checkout(body: unknown) {
     if (
       current &&
       current.code !== "FREE" &&
+      current.source !== "BUSINESS_TRIAL" &&
       (current.code !== v.plan || current.source !== "DIRECT_PURCHASE") &&
       (!current.expires_at || new Date(String(current.expires_at)) > new Date())
     )
@@ -191,7 +209,15 @@ export async function reconcilePayment(payment: VerifiedPayment) {
       400,
       "El pago no pertenece al comercio o ambiente configurado",
     );
-  const reference = z.uuid().safeParse(payment.external_reference);
+  const recurringOrder = (
+    await postgres.query<{ id: string }>(
+      "SELECT o.id FROM billing_orders o JOIN billing_agreements a ON a.id=o.agreement_id WHERE o.payment_id=$1 AND a.id::text=$2",
+      [payment.id, payment.external_reference],
+    )
+  ).rows[0];
+  const reference = z
+    .uuid()
+    .safeParse(recurringOrder?.id ?? payment.external_reference);
   if (!reference.success) return { received: true };
   return transaction(async (db) => {
     const ref = (
@@ -260,6 +286,7 @@ export async function reconcilePayment(payment: VerifiedPayment) {
       if (
         current &&
         current.code !== "FREE" &&
+        current.source !== "BUSINESS_TRIAL" &&
         (current.code !== order.code || current.source !== "DIRECT_PURCHASE") &&
         (!current.expires_at || current.expires_at > new Date())
       ) {
@@ -271,6 +298,7 @@ export async function reconcilePayment(payment: VerifiedPayment) {
       }
       const start =
         current?.code === order.code &&
+        current.source === "DIRECT_PURCHASE" &&
         current.expires_at &&
         current.expires_at > new Date()
           ? current.expires_at
@@ -340,6 +368,19 @@ export async function receivePaymentWebhook(request: Request) {
     )
   )
     throw new HttpError(401, "Firma inválida");
+  const body = await request
+    .clone()
+    .json()
+    .catch(() => ({}));
+  const type = new URL(request.url).searchParams.get("type") ?? body?.type;
+  if (
+    ["subscription_preapproval", "subscription_authorized_payment"].includes(
+      type,
+    )
+  ) {
+    const { recurringWebhook } = await import("./recurring");
+    return recurringWebhook(request);
+  }
   return reconcilePayment(await new MercadoPagoProvider().payment(id));
 }
 export async function billingHistory() {

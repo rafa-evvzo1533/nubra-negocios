@@ -1,0 +1,16 @@
+[Unit]
+Description=Nubra Negocios subscription expiration and payment reconciliation
+After=nubra-negocios.service
+
+[Service]
+Type=oneshot
+User=nubra-negocios
+Group=nubra-negocios
+WorkingDirectory=/opt/nubra-negocios/current
+EnvironmentFile=/etc/nubra-negocios/runtime.env
+ExecStart=/opt/nubra-negocios/node/bin/node scripts/maintain-subscriptions.mjs
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+TimeoutStartSec=900
